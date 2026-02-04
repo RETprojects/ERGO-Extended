@@ -3,9 +3,7 @@
 from huggingface_hub import hf_hub_download
 import pandas as pd
 
-REPO_ID = "microsoft/lost-in-conversation"
-FILENAME = "sharded_dataset.json"
+REPO_ID = "microsoft/lost_in_conversation"
+FILENAME = "lost_in_conversation.json"
 
-dataset = pd.read_json(
-    hf_hub_download(repo_id=REPO_ID, filename=FILENAME, repo_type="dataset")
-)
+dataset = hf_hub_download(repo_id=REPO_ID, filename=FILENAME, repo_type="dataset")
