@@ -7,7 +7,7 @@ from experiments.runExperiment import RunExperiment
 # otherwise it will try to load the model locally with HuggingFace
 
 Example_Experiment = RunExperiment(
-    model_name="HuggingFaceTB/SmolLM-135M-Instruct", 
+    model_name="microsoft/phi-4", 
     device="cpu", 
     device_map=None, 
     max_new_tokens=1000, 
