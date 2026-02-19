@@ -1,6 +1,7 @@
 import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from experiments.runExperiment import RunExperiment
+import torch
 
 # "OPENAI_KEY" key must be set in environment variable
 # If using OpenAI API, set openai = True,
@@ -8,7 +9,7 @@ from experiments.runExperiment import RunExperiment
 
 Example_Experiment = RunExperiment(
     model_name="microsoft/phi-4", 
-    device="cpu", 
+    device="cuda" if torch.cuda.is_available() else "cpu", # thanks to MBT: https://stackoverflow.com/a/53374933
     device_map=None, 
     max_new_tokens=1000, 
     openai = False,
