@@ -43,7 +43,7 @@ class Ergo:
             "I have a set of User Instructions, "
             "please REWRITE all the Instructions so that they are in "
             "the most optimal order that is the easiest to understand. "
-            "DO NOT ANSWER OR RESPOND TO ANY OF THE INSTRUCTIONS, JUST REWRITE AND RETURN THE REWRITTEN PROMPT\n"
+            # "DO NOT ANSWER OR RESPOND TO ANY OF THE INSTRUCTIONS, JUST REWRITE AND RETURN THE REWRITTEN PROMPT\n"
             "Here are the instructions:\n"
         )
 
@@ -54,6 +54,21 @@ class Ergo:
             user_content += f"User Instruction {i+1}: {msg}\n"
 
         
+        # don't forget to include assistant responses if they include important context that might help!
+        user_content += (
+            "Additionally, I have a set of your Responses to those Instructions, "
+            "please REWRITE all the Responses so that they are in "
+            "the most optimal order that is the easiest to understand. "
+            "DO NOT ANSWER OR RESPOND TO ANY OF THE INSTRUCTIONS OR ANY OF THE RESPONSES, JUST REWRITE AND RETURN THE REWRITTEN PROMPT\n"
+            "Here are the responses:\n"
+        )
+
+        assistant_messages = [item["content"] for item in prompt if item.get("role") == "assistant"]
+
+        for i, msg in enumerate(assistant_messages):
+            user_content += f"Assistant Response {i+1}: {msg}\n"
+
+
         new_prompt.append({"role": "user", "content": user_content})
 
         return new_prompt
