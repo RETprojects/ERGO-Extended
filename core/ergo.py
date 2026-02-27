@@ -39,34 +39,53 @@ class Ergo:
         new_prompt = self.rewrite_prompts.get(dataset.dataset_name, []).copy()
 
         
+        # user_content = (
+        #     "I have a set of User Instructions, "
+        #     "please REWRITE all the Instructions so that they are in "
+        #     "the most optimal order that is the easiest to understand. "
+        #     # "DO NOT ANSWER OR RESPOND TO ANY OF THE INSTRUCTIONS, JUST REWRITE AND RETURN THE REWRITTEN PROMPT\n"
+        #     "Here are the instructions:\n"
+        # )
+
+        
+        # user_messages = [item["content"] for item in prompt if item.get("role") == "user"]
+
+        # for i, msg in enumerate(user_messages):
+        #     user_content += f"User Instruction {i+1}: {msg}\n"
+
+        
+        # # don't forget to include assistant responses if they include important context that might help!
+        # user_content += (
+        #     "Additionally, I have a set of your Responses to those Instructions, "
+        #     "please REWRITE all the Responses so that they are in "
+        #     "the most optimal order that is the easiest to understand. "
+        #     "DO NOT ANSWER OR RESPOND TO ANY OF THE INSTRUCTIONS OR ANY OF THE RESPONSES, JUST REWRITE AND RETURN THE REWRITTEN PROMPT\n"
+        #     "Here are the responses:\n"
+        # )
+
+        # assistant_messages = [item["content"] for item in prompt if item.get("role") == "assistant"]
+
+        # for i, msg in enumerate(assistant_messages):
+        #     user_content += f"Assistant Response {i+1}: {msg}\n"
+
+        # consolidate the user instructions as well as the assistant responses (in case the responses may contain some important context)
+
         user_content = (
-            "I have a set of User Instructions, "
-            "please REWRITE all the Instructions so that they are in "
-            "the most optimal order that is the easiest to understand. "
-            # "DO NOT ANSWER OR RESPOND TO ANY OF THE INSTRUCTIONS, JUST REWRITE AND RETURN THE REWRITTEN PROMPT\n"
-            "Here are the instructions:\n"
-        )
-
-        
-        user_messages = [item["content"] for item in prompt if item.get("role") == "user"]
-
-        for i, msg in enumerate(user_messages):
-            user_content += f"User Instruction {i+1}: {msg}\n"
-
-        
-        # don't forget to include assistant responses if they include important context that might help!
-        user_content += (
-            "Additionally, I have a set of your Responses to those Instructions, "
-            "please REWRITE all the Responses so that they are in "
+            "I have a set of User Instructions and your Responses to those Instructions, "
+            "please REWRITE all the Instructions and all the Responses so that they are in "
             "the most optimal order that is the easiest to understand. "
             "DO NOT ANSWER OR RESPOND TO ANY OF THE INSTRUCTIONS OR ANY OF THE RESPONSES, JUST REWRITE AND RETURN THE REWRITTEN PROMPT\n"
-            "Here are the responses:\n"
+            "Here are the instructions and the responses:\n"
         )
 
-        assistant_messages = [item["content"] for item in prompt if item.get("role") == "assistant"]
+        
+        user_messages = [item["content"] for item in prompt if (item.get("role") == "user" or item.get("role") == "assistant")]
 
-        for i, msg in enumerate(assistant_messages):
-            user_content += f"Assistant Response {i+1}: {msg}\n"
+        for i, msg in enumerate(user_messages):
+            if msg.get("role") == "user":
+                user_content += f"User Instruction {i+1}: {msg}\n"
+            else:
+                user_content += f"Assistant Response {i+1}: {msg}\n"
 
 
         new_prompt.append({"role": "user", "content": user_content})
