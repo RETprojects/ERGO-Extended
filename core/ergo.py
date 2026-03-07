@@ -79,13 +79,22 @@ class Ergo:
         )
 
         
-        user_messages = [item["content"] for item in prompt if (item.get("role") == "user" or item.get("role") == "assistant")]
+        # user_messages = [item["content"] for item in prompt if (item.get("role") == "user" or item.get("role") == "assistant")]
+
+        # for i, msg in enumerate(user_messages):
+        #     if msg.get("role") == "user":
+        #         user_content += f"User Instruction {i+1}: {msg}\n"
+        #     else:
+        #         user_content += f"Assistant Response {i+1}: {msg}\n"
+
+        # for each message, track whether it was written by the user or by the assistant
+        user_messages = [(item.get("role"), item["content"]) for item in prompt if (item.get("role") == "user" or item.get("role") == "assistant")]
 
         for i, msg in enumerate(user_messages):
-            if msg.get("role") == "user":
-                user_content += f"User Instruction {i+1}: {msg}\n"
+            if msg[0] == "user":
+                user_content += f"User Instruction {i+1}: {msg[1]}\n"
             else:
-                user_content += f"Assistant Response {i+1}: {msg}\n"
+                user_content += f"Assistant Response {i+1}: {msg[1]}\n"
 
 
         new_prompt.append({"role": "user", "content": user_content})
