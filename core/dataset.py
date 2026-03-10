@@ -165,3 +165,28 @@ class DataToText(Dataset):
                 data.append(task)
 
         return data
+
+class Summary(Dataset):
+    def __init__(self, dataset_path):
+        super().__init__("Summary", dataset_path)
+        self.data = self.load_data()
+        self.final_shard_instruct = ""
+    
+    def get_base_system(self, i):
+        return {
+        "role": "system",
+        "content": (
+            f"You are a professional document analyst. You receive documents and are tasked with writing specific summaries of the document, which you do carefully."
+        )
+        }
+    
+    def load_data(self):
+        data = []
+        with open(self.dataset_path, 'r') as f:
+            temp_data = json.load(f)
+        
+        for task in temp_data:
+            if 'summary' in task['task']:
+                data.append(task)
+
+        return data
