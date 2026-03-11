@@ -1,5 +1,5 @@
 import json
-from core.dataset import GSM8K, Code, Database, DataToText, Actions, Dataset
+from core.dataset import GSM8K, Code, Database, DataToText, Actions, Summary, Dataset
 from .utils import CodeEvalUtils, DatabaseEvalUtils, DataToTextEvalUtils, ActionsEvalUtils
 import ast
 import numpy as np

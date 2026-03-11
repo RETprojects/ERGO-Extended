@@ -2,7 +2,7 @@ from core.model import BaseModel
 from core.dataset import Dataset  
 from core.ergo import Ergo
 from core.utils import Logger
-from evaluation.evaluator import GSM8KEvaluator, ActionsEvaluator, CodeEvaluator, DatabaseEvaluator, DataToTextEvaluator, Evaluator
+from evaluation.evaluator import GSM8KEvaluator, ActionsEvaluator, CodeEvaluator, DatabaseEvaluator, DataToTextEvaluator, SummaryEvaluator, Evaluator
 import random, gc, torch
 
 class RunERGO():
