@@ -1,7 +1,7 @@
 # core/ergo.py
 from .model import BaseModel
 from .dataset import Dataset
-from .prompts import GSM8K_prompt, Code_prompt, D2T_prompt, DB_prompt
+from .prompts import GSM8K_prompt, Code_prompt, D2T_prompt, DB_prompt, Summary_prompt
 import re
 
 
@@ -24,7 +24,8 @@ class Ergo:
             "Database": DB_prompt,
             "Code": Code_prompt,
             "Actions": GSM8K_prompt, # We reused GSM8K prompt for Actions
-            "DataToText": D2T_prompt
+            "DataToText": D2T_prompt,
+            "Summary": Summary_prompt
         }
 
     def rewrite_prompt(self, prompt, dataset: Dataset):
