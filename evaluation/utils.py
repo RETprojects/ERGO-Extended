@@ -435,7 +435,7 @@ class SummaryEvalUtils(EvalUtils):
         with open(eval_prompt_fn, "r") as f:   
             prompt_eval = f.read()
 
-        bullets_obj = summary2bullets(summary)
+        bullets_obj = self.summary2bullets(summary)
         bullets = bullets_obj["bullets"]
         bullets_str = json.dumps({"bullets": [{"bullet_id": i+1, "text": bullet} for i, bullet in enumerate(bullets)]}, indent=1)
         insight_scores = []
@@ -467,7 +467,7 @@ class SummaryEvalUtils(EvalUtils):
         return ref_ids
 
     def compute_single_sample_scores(summary, evals, insightid2ref_citations, partial_score=0.5, cite_offset=0): # the cite offset should be one for the annotators (but not for the model eval)
-        bullets_obj = summary2bullets(summary)
+        bullets_obj = self.summary2bullets(summary)
         bullets = bullets_obj["bullets"]
         trim_ratio = bullets_obj["trim_ratio"]
 
@@ -484,7 +484,7 @@ class SummaryEvalUtils(EvalUtils):
                     bullet_match_idx = -1
                 bullet_match = bullets[bullet_match_idx - 1]
 
-                gen_citations = set([cite+cite_offset for cite in extract_citations(bullet_match)])
+                gen_citations = set([cite+cite_offset for cite in self.extract_citations(bullet_match)])
                 ref_citations = set(insightid2ref_citations[insight_id])
 
                 P = 0 if len(gen_citations) == 0 else len(gen_citations & ref_citations) / len(gen_citations)
@@ -500,5 +500,5 @@ class SummaryEvalUtils(EvalUtils):
         return {"coverage_score": coverage_scores, "citation_score": citation_scores, "joint_score": joint_scores, "citation_precision": citation_precisions, "citation_recall": citation_recalls, "trim_ratio": trim_ratio}
 
     def compute_single_sample_results(summary, evals, insightid2ref_citations, partial_score=0.5, cite_offset=0):
-        scores = compute_single_sample_scores(summary, evals, insightid2ref_citations, partial_score, cite_offset=cite_offset)
+        scores = self.compute_single_sample_scores(summary, evals, insightid2ref_citations, partial_score, cite_offset=cite_offset)
         return {k: np.mean(v).item() for k, v in scores.items()}
