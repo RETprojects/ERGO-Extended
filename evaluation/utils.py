@@ -97,7 +97,7 @@ class ActionsEvalUtils(EvalUtils):
             sample["reference_answer"],
             sample["language"],
             sample["test_category"],
-            "gpt-4o"
+            "gpt-oss-120b"
         )
         score = 1 if result["valid"] else 0
         return {"is_correct": result["valid"], "score": score, "error": result["error"]}
