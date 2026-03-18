@@ -13,6 +13,7 @@ UNDERSCORE_TO_DOT = [
     "gpt-4o-mini-2024-07-18-FC",
     "gpt-4-turbo-2024-04-09-FC",
     "gpt-3.5-turbo-0125-FC",
+    "gpt-oss-120b",
     "claude-3-opus-20240229-FC",
     "claude-3-sonnet-20240229-FC",
     "claude-3-5-sonnet-20240620-FC",
