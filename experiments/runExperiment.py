@@ -1,9 +1,9 @@
 from core.model import OpenAIModel, LocalLLMModel
-from core.dataset import GSM8K, Database, Code, Actions, DataToText
+from core.dataset import GSM8K, Database, Code, Actions, DataToText, Summary
 from core.ergo import Ergo
 from core.utils import Logger
 from generation.generator import RunERGO
-from evaluation.evaluator import GSM8KEvaluator, DatabaseEvaluator, ActionsEvaluator, CodeEvaluator, DataToTextEvaluator
+from evaluation.evaluator import GSM8KEvaluator, DatabaseEvaluator, ActionsEvaluator, CodeEvaluator, DataToTextEvaluator, SummaryEvaluator
 
 class RunExperiment():
     """
