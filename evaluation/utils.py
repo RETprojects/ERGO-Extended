@@ -5,6 +5,8 @@ import sys
 import tempfile
 import subprocess
 import sqlite3
+import json
+import os
 
 
 class EvalUtils:
@@ -422,9 +424,9 @@ class SummaryEvalUtils(EvalUtils):
 
     def evaluator_function(self, extracted_answer, sample):
         evaluator_model_card = "t-gpt-4o" if os.environ.get("USE_TRAPI", "0") == "1" else "gpt-4o"
-        evals = evaluate_insights(sample["insights"], extracted_answer, evaluator_model_card, "eval_summhay.txt")
+        evals = self.evaluate_insights(sample["insights"], extracted_answer, evaluator_model_card, "eval_summhay.txt")
         # eval should likely be cached somewhere, so results can be explained if needed
-        results = compute_single_sample_results(extracted_answer, evals, sample["insightid2ref_citations"])
+        results = self.compute_single_sample_results(extracted_answer, evals, sample["insightid2ref_citations"])
         # results["score"] = results["coverage_score"]
         results["score"] = results["joint_score"] # we save this as the main score we anchor on
         return results
