@@ -431,7 +431,7 @@ class SummaryEvalUtils(EvalUtils):
         
         return {"bullets": trimmed_bullets, "trim_ratio": excess_percentage}
 
-    def evaluate_insights(insights, summary, evaluator_model_card, eval_prompt_fn="prompts/summary/summhay_evaluation.txt"):
+    def evaluate_insights(insights, summary, evaluator_model_card, eval_prompt_fn="eval_summhay.txt"):
         with open(eval_prompt_fn, "r") as f:   
             prompt_eval = f.read()
 
