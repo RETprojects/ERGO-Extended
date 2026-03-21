@@ -395,11 +395,11 @@ else:
 class SummaryEvalUtils(EvalUtils):
     def __init__(self):
         # self.version = version
-        with open(f"summary_full_prompt_conv.txt", "r") as f:
+        with open("summary_full_prompt_conv.txt", "r") as f:
             self.fully_specified_prompt_conv = f.read()
-        with open(f"summary_full_prompt_news.txt", "r") as f:
+        with open("summary_full_prompt_news.txt", "r") as f:
             self.fully_specified_prompt_news = f.read()
-        with open(f"summary_system_prompt.txt", "r") as f:
+        with open("summary_system_prompt.txt", "r") as f:
             self.system_prompt = f.read()
         self.answer_extraction_strategy = "full_response"
 
