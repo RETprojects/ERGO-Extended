@@ -104,6 +104,9 @@ class Ergo:
 
     def run(self, sharded_prompt, dataset: Dataset, prev_entropy):
         """
+        TODO:
+        - Check entropy, probability, & perplexity
+        - Determine thresholds for each of the 3 signals
         Run ERGO on a prompt:
         - Generate response
         - Check entropy
