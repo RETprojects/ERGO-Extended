@@ -102,10 +102,23 @@ class LocalLLMModel(BaseModel):
 
         return avg_entropy, response_only
 
+    # Shannon entropy
     def compute_entropy(self, probs):
         entropy = -torch.sum(probs * torch.log(probs + 1e-8), dim=-1)
         avg_entropy = entropy.mean().item()
         return avg_entropy
+    
+    # token probability
+    def compute_probability(self, probs):
+        probability = torch.exp(torch.log(probs + 1e-8))
+        avg_probability = probability.mean().item()
+        return avg_probability
+    
+    # perplexity
+    def compute_perplexity(self, probs):
+        perplexity = torch.exp(- 1.0 / len(probs) * torch.sum(torch.log(probs + 1e-8), dim=-1))
+        avg_perplexity = perplexity.mean().item()
+        return avg_perplexity
 
 
 class OpenAIModel(BaseModel):
