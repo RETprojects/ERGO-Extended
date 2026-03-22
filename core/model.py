@@ -134,7 +134,8 @@ class LocalLLMModel(BaseModel):
     
     # perplexity
     def compute_perplexity(self, probs):
-        perplexity = torch.exp(-1.0 / len(probs) * torch.sum(torch.log(probs + 1e-8), dim=-1))
+        inv_probability = 1.0 / torch.exp(torch.log(probs + 1e-8))
+        perplexity = inv_probability.mean().item()
         return perplexity
 
 
