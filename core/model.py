@@ -40,8 +40,8 @@ class BaseModel:
     
     def compute_perplexity(self, output: Any) -> float:
         """
-        Compute the average token-level perplexity of the generated text.
-        Returns: avg_perplexity
+        Compute the perplexity of the generated text.
+        Returns: perplexity
         """
         raise NotImplementedError
     
@@ -107,18 +107,18 @@ class LocalLLMModel(BaseModel):
                 probs = torch.softmax(logits, dim=-1)
                 avg_entropy = self.compute_entropy(probs)
                 avg_probability = self.compute_probability(probs)
-                avg_perplexity = self.compute_perplexity(probs)
+                perplexity = self.compute_perplexity(probs)
             else:
                 avg_entropy = None
                 avg_probability = None
-                avg_perplexity = None
+                perplexity = None
 
         response_ids = outputs.sequences
         input_len = inputs["input_ids"].shape[1]
         new_tokens = response_ids[:, input_len:].cpu()
         response_only = self.tokenizer.batch_decode(new_tokens, skip_special_tokens=True)[0]
 
-        return avg_entropy, avg_probability, avg_perplexity, response_only
+        return avg_entropy, avg_probability, perplexity, response_only
 
     # Shannon entropy
     def compute_entropy(self, probs):
@@ -135,8 +135,7 @@ class LocalLLMModel(BaseModel):
     # perplexity
     def compute_perplexity(self, probs):
         perplexity = torch.exp(-1.0 / len(probs) * torch.sum(torch.log(probs + 1e-8), dim=-1))
-        avg_perplexity = perplexity.mean().item()
-        return avg_perplexity
+        return perplexity
 
 
 class OpenAIModel(BaseModel):
@@ -185,3 +184,25 @@ class OpenAIModel(BaseModel):
 
         avg_entropy = sum(entropies) / len(entropies) if entropies else 0.0
         return avg_entropy
+    
+    def compute_probability(self, token_logprobs):
+        probabilities = []
+        for token_info in token_logprobs:
+            probability = 1.0
+            for logprob in token_info.top_logprobs.values():
+                probability *= logprob
+            probabilities.append(math.exp(probability))
+
+        avg_probability = sum(probabilities) / len(probabilities) if probabilities else 0.0
+        return avg_probability
+    
+    def compute_perplexity(self, token_logprobs):
+        inv_probabilities = []
+        for token_info in token_logprobs:
+            probability = 1.0
+            for logprob in token_info.top_logprobs.values():
+                probability *= logprob
+            inv_probabilities.append(1.0 / math.exp(probability))
+
+        perplexity = sum(inv_probabilities) / len(inv_probabilities) if inv_probabilities else 0.0
+        return perplexity

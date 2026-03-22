@@ -112,12 +112,12 @@ class Ergo:
         - Check entropy
         - If above threshold, rewrite prompt, start new context with just rewritten prompt and regenerate
         """
-        avg_entropy, avg_probability, avg_perplexity, response = self.model.generate(sharded_prompt)
+        avg_entropy, avg_probability, perplexity, response = self.model.generate(sharded_prompt)
         reset = False
         prev_prompts = None
         
         # if change in entropy >= threshold, change in probability <= -threshold, or change in perplexity > threshold
-        if avg_entropy - prev_entropy >= self.threshold or avg_probability - prev_probability <= -self.threshold or avg_perplexity - prev_perplexity >= self.threshold:
+        if avg_entropy - prev_entropy >= self.threshold or avg_probability - prev_probability <= -self.threshold or perplexity - prev_perplexity >= self.threshold:
             reset = True
             rewritten = self.rewrite_prompt(sharded_prompt, dataset)
             _, rewritten_context = self.model.generate(rewritten)
@@ -132,4 +132,4 @@ class Ergo:
 
         response = re.sub(r"<think>[\s\S]*?(?:</think>|$)", "", response, flags=re.DOTALL)
 
-        return avg_entropy, avg_probability, avg_perplexity, response, reset, sharded_prompt, prev_prompts
+        return avg_entropy, avg_probability, perplexity, response, reset, sharded_prompt, prev_prompts
