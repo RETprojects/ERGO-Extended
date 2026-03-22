@@ -31,6 +31,20 @@ class BaseModel:
         """
         raise NotImplementedError
     
+    def compute_probability(self, output: Any) -> float:
+        """
+        Compute the average token-level probability of the generated text.
+        Returns: avg_probability
+        """
+        raise NotImplementedError
+    
+    def compute_perplexity(self, output: Any) -> float:
+        """
+        Compute the average token-level perplexity of the generated text.
+        Returns: avg_perplexity
+        """
+        raise NotImplementedError
+    
 
 class LocalLLMModel(BaseModel):
 
@@ -92,15 +106,19 @@ class LocalLLMModel(BaseModel):
                 logits = torch.stack([s.to(base_dev) for s in scores])
                 probs = torch.softmax(logits, dim=-1)
                 avg_entropy = self.compute_entropy(probs)
+                avg_probability = self.compute_probability(probs)
+                avg_perplexity = self.compute_perplexity(probs)
             else:
                 avg_entropy = None
+                avg_probability = None
+                avg_perplexity = None
 
         response_ids = outputs.sequences
         input_len = inputs["input_ids"].shape[1]
         new_tokens = response_ids[:, input_len:].cpu()
         response_only = self.tokenizer.batch_decode(new_tokens, skip_special_tokens=True)[0]
 
-        return avg_entropy, response_only
+        return avg_entropy, avg_probability, avg_perplexity, response_only
 
     # Shannon entropy
     def compute_entropy(self, probs):
@@ -116,7 +134,7 @@ class LocalLLMModel(BaseModel):
     
     # perplexity
     def compute_perplexity(self, probs):
-        perplexity = torch.exp(- 1.0 / len(probs) * torch.sum(torch.log(probs + 1e-8), dim=-1))
+        perplexity = torch.exp(-1.0 / len(probs) * torch.sum(torch.log(probs + 1e-8), dim=-1))
         avg_perplexity = perplexity.mean().item()
         return avg_perplexity
 
