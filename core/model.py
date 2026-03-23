@@ -20,7 +20,7 @@ class BaseModel:
     def generate(self, prompt):
         """
         Generate text using a local Hugging Face model or OpenAI API.
-        Returns: (avg_entropy, generated_text)
+        Returns: (avg_entropy, avg_probability, perplexity, generated_text)
         """
         raise NotImplementedError
 
@@ -75,7 +75,7 @@ class LocalLLMModel(BaseModel):
     def generate(self, messages):
         """
         Device-aware generation for single-device and device_map='auto' sharded models.
-        Returns: (avg_entropy, generated_text)
+        Returns: (avg_entropy, avg_probability, perplexity, generated_text)
         """
 
 
@@ -151,7 +151,7 @@ class OpenAIModel(BaseModel):
     def generate(self, prompt: List[Dict[str, str]]):
         """
         Sends a prompt to OpenAI Chat API and returns:
-        (average_entropy, generated_text)
+        (average_entropy, average_probability, perplexity, generated_text)
         """
 
         resp = self.client.chat.completions.create(
@@ -170,9 +170,11 @@ class OpenAIModel(BaseModel):
             sys.exit("ERROR: INPUTTED OPENAI MODEL DOESNT RETURN LOGPROBS")
 
         avg_entropy = self.compute_entropy(token_logprobs)
+        avg_probability = self.compute_probability(token_logprobs)
+        perplexity = self.compute_perplexity(token_logprobs)
         # tokens_used = resp.usage.completion_tokens + resp.usage.prompt_tokens
 
-        return avg_entropy, generated_text#, tokens_used
+        return avg_entropy, avg_probability, perplexity, generated_text#, tokens_used
 
     def compute_entropy(self, token_logprobs):
         entropies = []
