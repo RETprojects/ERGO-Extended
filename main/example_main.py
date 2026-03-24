@@ -18,8 +18,8 @@ Example_Experiment = RunExperiment(
 
 Example_Experiment.run_GSM8K(
     dataset_path="sharded_dataset.json", # Path to sharded dataset from Laban et al.
-    num_Qs=5, 
-    num_runs=1, 
+    num_Qs=100, 
+    num_runs=3, 
     threshold=0.001, 
     output_path="outputs/math_example_3signals.json"
 )
