@@ -41,11 +41,13 @@ class Ergo:
         
 
         user_content = (
-            "I have a set of User Instructions and your Responses to those Instructions, "
-            "please REWRITE all the Instructions and all the Responses so that they are in "
+            "I have a set of User Instructions, "
+            "please REWRITE all the Instructions so that they are in "
             "the most optimal order that is the easiest to understand. "
-            "DO NOT ANSWER OR RESPOND TO ANY OF THE INSTRUCTIONS OR ANY OF THE RESPONSES, JUST REWRITE AND RETURN THE REWRITTEN PROMPT\n"
-            "Here are the instructions and the responses:\n"
+            "DO NOT ANSWER OR RESPOND TO ANY OF THE INSTRUCTIONS, JUST REWRITE AND RETURN THE REWRITTEN PROMPT\n"
+            "DO NOT FABRICATE AN ANSWER IF YOU CANNOT DETERMINE A CORRECT ANSWER\n"
+            "IGNORE IRRELEVANT INFORMATION\n"
+            "Here are the instructions:\n"
         )
 
         
