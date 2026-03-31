@@ -62,12 +62,11 @@ class Ergo:
     def run(self, sharded_prompt, dataset: Dataset, prev_entropy, prev_probability, prev_perplexity):
         """
         TODO:
-        - Check entropy, probability, & perplexity
         - Determine thresholds for each of the 3 signals
         Run ERGO on a prompt:
         - Generate response
-        - Check entropy
-        - If above threshold, rewrite prompt, start new context with just rewritten prompt and regenerate
+        - Check entropy, probability, perplexity
+        - If 1+ signals surpass their threshold, rewrite prompt, start new context with just rewritten prompt and regenerate
         """
         avg_entropy, avg_probability, perplexity, response = self.model.generate(sharded_prompt)
         reset = False
