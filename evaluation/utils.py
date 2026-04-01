@@ -9,7 +9,8 @@ import json
 import os
 import json, re
 import numpy as np
-from core.model import generate_json
+# from core.model import generate_json
+import core.model as model
 
 
 class EvalUtils:
@@ -526,6 +527,8 @@ class SummaryEvalUtils(EvalUtils):
         return {"bullets": trimmed_bullets, "trim_ratio": excess_percentage}
 
     def evaluate_insights(self, insights, summary, evaluator_model_card, eval_prompt_fn="eval_summhay.txt"):
+        openaimodel = model.OpenAIModel() # make an instance so that we can use generate_json
+
         with open(eval_prompt_fn, "r") as f:   
             prompt_eval = f.read()
 
@@ -534,7 +537,7 @@ class SummaryEvalUtils(EvalUtils):
         bullets_str = json.dumps({"bullets": [{"bullet_id": i+1, "text": bullet} for i, bullet in enumerate(bullets)]}, indent=1)
         insight_scores = []
         for insight in insights:
-            response_all = generate_json([{"role": "user", "content": prompt_eval}], model=evaluator_model_card, return_metadata=True, variables={"BULLETS": bullets_str, "INSIGHT": insight["insight"]})
+            response_all = openaimodel.generate_json([{"role": "user", "content": prompt_eval}], model=evaluator_model_card, return_metadata=True, variables={"BULLETS": bullets_str, "INSIGHT": insight["insight"]})
             response_json  = response_all["message"]
             response_json["insight_id"] = insight["insight_id"] 
             insight_scores.append(response_json)
