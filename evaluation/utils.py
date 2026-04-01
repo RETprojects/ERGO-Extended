@@ -9,7 +9,7 @@ import json
 import os
 import json, re
 import numpy as np
-from ..core.model import generate_json
+from core.model import generate_json
 
 
 class EvalUtils:
