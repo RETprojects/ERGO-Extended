@@ -178,10 +178,10 @@ class OpenAIModel(BaseModel):
         return avg_entropy, avg_probability, perplexity, generated_text#, tokens_used
 
     # from lost-in-conversation/model-openai.py
-    def generate_json(self, messages, model="gpt-4o-mini", **kwargs):
-        response = self.generate(messages, model, is_json=True, **kwargs)
-        response["message"] = json.loads(response["message"])
-        return response
+    # def generate_json(self, messages, model="gpt-4o-mini", **kwargs):
+    #     response = self.generate(messages, model, is_json=True, **kwargs)
+    #     response["message"] = json.loads(response["message"])
+    #     return response
 
     def compute_entropy(self, token_logprobs):
         entropies = []
