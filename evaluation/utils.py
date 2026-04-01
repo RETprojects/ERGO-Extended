@@ -7,6 +7,9 @@ import subprocess
 import sqlite3
 import json
 import os
+import json, re
+import numpy as np
+from ..core.model import generate_json
 
 
 class EvalUtils:
@@ -394,32 +397,33 @@ else:
 
 class SummaryEvalUtils(EvalUtils):
     def __init__(self):
-        # self.version = version
-        with open("summary_full_prompt_conv.txt", "r") as f:
-            self.fully_specified_prompt_conv = f.read()
-        with open("summary_full_prompt_news.txt", "r") as f:
-            self.fully_specified_prompt_news = f.read()
-        with open("summary_system_prompt.txt", "r") as f:
-            self.system_prompt = f.read()
-        self.answer_extraction_strategy = "full_response"
+        super().__init__()
+        # # self.version = version
+        # with open("summary_full_prompt_conv.txt", "r") as f:
+        #     self.fully_specified_prompt_conv = f.read()
+        # with open("summary_full_prompt_news.txt", "r") as f:
+        #     self.fully_specified_prompt_news = f.read()
+        # with open("summary_system_prompt.txt", "r") as f:
+        #     self.system_prompt = f.read()
+        # self.answer_extraction_strategy = "full_response"
 
-    def get_answer_description(self) -> str:
-        return "A complete summary potentially containing multiple lines, and citation."
+    # def get_answer_description(self) -> str:
+    #     return "A complete summary potentially containing multiple lines, and citation."
 
-    def generate_system_prompt(self, sample):
-        return self.system_prompt
+    # def generate_system_prompt(self, sample):
+    #     return self.system_prompt
 
-    def get_task_name(self) -> str:
-        return "summary"
+    # def get_task_name(self) -> str:
+    #     return "summary"
 
-    def get_dataset_file(self) -> str:
-        return "data/sharded_instructions_600.json"
+    # def get_dataset_file(self) -> str:
+    #     return "data/sharded_instructions_600.json"
 
-    def get_samples(self):
-        with open(self.get_dataset_file(), "r") as f:
-            samples = json.load(f)
-        samples = [d for d in samples if d["task"] == "summary"]
-        return samples
+    # def get_samples(self):
+    #     with open(self.get_dataset_file(), "r") as f:
+    #         samples = json.load(f)
+    #     samples = [d for d in samples if d["task"] == "summary"]
+    #     return samples
 
 
     def evaluator_function(self, extracted_answer, sample):
@@ -431,167 +435,163 @@ class SummaryEvalUtils(EvalUtils):
         results["score"] = results["joint_score"] # we save this as the main score we anchor on
         return results
 
-    def populate_fully_specific_prompt(self, sample):
-        prompt = self.fully_specified_prompt_conv if sample["domain"] == "conv" else self.fully_specified_prompt_news
+    # def populate_fully_specific_prompt(self, sample):
+    #     prompt = self.fully_specified_prompt_conv if sample["domain"] == "conv" else self.fully_specified_prompt_news
 
-        documents_txt = ""
-        for document in sample["documents"]:
-            documents_txt += f"Document {document['document_index']}:\n{document['document_text']}\n\n"
+    #     documents_txt = ""
+    #     for document in sample["documents"]:
+    #         documents_txt += f"Document {document['document_index']}:\n{document['document_text']}\n\n"
 
-        prompt = prompt.replace("[[TOPIC]]", sample["topic"]).replace("[[DOCUMENTS]]", documents_txt).replace("[[QUERY]]", sample["query"]).replace("[[N_DOCS]]", str(len(sample["documents"]))).replace("[[N_INSIGHTS]]", str(len(sample["insights"])))
-        return prompt
+    #     prompt = prompt.replace("[[TOPIC]]", sample["topic"]).replace("[[DOCUMENTS]]", documents_txt).replace("[[QUERY]]", sample["query"]).replace("[[N_DOCS]]", str(len(sample["documents"]))).replace("[[N_INSIGHTS]]", str(len(sample["insights"])))
+    #     return prompt
 
-    def populate_concat_prompt(self, sample):
-        prompt = self.fully_specified_prompt_conv if sample["domain"] == "conv" else self.fully_specified_prompt_news
-        documents_txt = "The documents were received in multiple chunks, you can disregard the chunking information, and consider all documents equally."
-        doc_idx2doc = {doc["document_index"]: doc["document_text"] for doc in sample["documents"]}
+    # def populate_concat_prompt(self, sample):
+    #     prompt = self.fully_specified_prompt_conv if sample["domain"] == "conv" else self.fully_specified_prompt_news
+    #     documents_txt = "The documents were received in multiple chunks, you can disregard the chunking information, and consider all documents equally."
+    #     doc_idx2doc = {doc["document_index"]: doc["document_text"] for doc in sample["documents"]}
 
-        for i, shard in enumerate(sample["shards"]):
-            documents_txt += f"Document Chunk {i+1}:\n"
-            for doc_idx in shard["doc_idxs"]:
-                documents_txt += f"Document {doc_idx}:\n{doc_idx2doc[doc_idx]}\n\n"
+    #     for i, shard in enumerate(sample["shards"]):
+    #         documents_txt += f"Document Chunk {i+1}:\n"
+    #         for doc_idx in shard["doc_idxs"]:
+    #             documents_txt += f"Document {doc_idx}:\n{doc_idx2doc[doc_idx]}\n\n"
 
-        prompt = prompt.replace("[[TOPIC]]", sample["topic"]).replace("[[DOCUMENTS]]", documents_txt).replace("[[QUERY]]", sample["query"]).replace("[[N_DOCS]]", str(len(sample["documents"]))).replace("[[N_INSIGHTS]]", str(len(sample["insights"])))
-        return prompt
+    #     prompt = prompt.replace("[[TOPIC]]", sample["topic"]).replace("[[DOCUMENTS]]", documents_txt).replace("[[QUERY]]", sample["query"]).replace("[[N_DOCS]]", str(len(sample["documents"]))).replace("[[N_INSIGHTS]]", str(len(sample["insights"])))
+    #     return prompt
     
-    def populate_sharded_prompt(self, sample, turn_index):
-        doc_idx2doc = {doc["document_index"]: doc["document_text"] for doc in sample["documents"]}
-        if turn_index == 0:
-            shard = sample["shards"][0]
-            prompt = self.fully_specified_prompt_conv if sample["domain"] == "conv" else self.fully_specified_prompt_news
-            documents_txt = ""
-            for doc_idx in shard["doc_idxs"]:
-                documents_txt += f"Document {doc_idx}:\n{doc_idx2doc[doc_idx]}\n\n"
-            prompt = prompt.replace("[[TOPIC]]", sample["topic"]).replace("[[DOCUMENTS]]", documents_txt).replace("[[QUERY]]", sample["query"]).replace("[[N_DOCS]]", str(len(sample["documents"]))).replace("[[N_INSIGHTS]]", str(len(sample["insights"])))
-            return prompt, shard["shard_id"], 0.0
-        elif turn_index <= len(sample["shards"]):
-            shard = sample["shards"][(turn_index-1)]
-            documents_txt = ""
-            for doc_idx in shard["doc_idxs"]:
-                documents_txt += f"Document {doc_idx}:\n{doc_idx2doc[doc_idx]}\n\n"
-            prompt = f"I have found a few additional documents, please rewrite the summary considering all documents so far (from before, and the new ones).\n\n{documents_txt}"
-            return prompt, shard["shard_id"], 0.0
-        else:
-            return None, -1, 0.0
+    # def populate_sharded_prompt(self, sample, turn_index):
+    #     doc_idx2doc = {doc["document_index"]: doc["document_text"] for doc in sample["documents"]}
+    #     if turn_index == 0:
+    #         shard = sample["shards"][0]
+    #         prompt = self.fully_specified_prompt_conv if sample["domain"] == "conv" else self.fully_specified_prompt_news
+    #         documents_txt = ""
+    #         for doc_idx in shard["doc_idxs"]:
+    #             documents_txt += f"Document {doc_idx}:\n{doc_idx2doc[doc_idx]}\n\n"
+    #         prompt = prompt.replace("[[TOPIC]]", sample["topic"]).replace("[[DOCUMENTS]]", documents_txt).replace("[[QUERY]]", sample["query"]).replace("[[N_DOCS]]", str(len(sample["documents"]))).replace("[[N_INSIGHTS]]", str(len(sample["insights"])))
+    #         return prompt, shard["shard_id"], 0.0
+    #     elif turn_index <= len(sample["shards"]):
+    #         shard = sample["shards"][(turn_index-1)]
+    #         documents_txt = ""
+    #         for doc_idx in shard["doc_idxs"]:
+    #             documents_txt += f"Document {doc_idx}:\n{doc_idx2doc[doc_idx]}\n\n"
+    #         prompt = f"I have found a few additional documents, please rewrite the summary considering all documents so far (from before, and the new ones).\n\n{documents_txt}"
+    #         return prompt, shard["shard_id"], 0.0
+    #     else:
+    #         return None, -1, 0.0
 
     
-    def process_original_sample(self, sample):
-        return {
-            "task_id": sample["task_id"],
-            "topic": sample["topic"],
-            "query": sample["query"],
-            "documents": sample["documents"],
-            "insights": sample["insights"]
-        }
+    # def process_original_sample(self, sample):
+    #     return {
+    #         "task_id": sample["task_id"],
+    #         "topic": sample["topic"],
+    #         "query": sample["query"],
+    #         "documents": sample["documents"],
+    #         "insights": sample["insights"]
+    #     }
 
     # def __init__(self):
     #     super().__init__()
-    
-    # import json, re, os
-    # import numpy as np
-    # from openai import generate_json
 
-    # def summary2bullets(summary, max_summary_length=300):
-    #     bullets = summary.split("\n")
+    def summary2bullets(self, summary, max_summary_length=300):
+        bullets = summary.split("\n")
         
-    #     # Count words in each bullet (using space counting)
-    #     bullet_word_counts = [len(bullet.split()) for bullet in bullets]
-    #     total_words = sum(bullet_word_counts)
+        # Count words in each bullet (using space counting)
+        bullet_word_counts = [len(bullet.split()) for bullet in bullets]
+        total_words = sum(bullet_word_counts)
         
-    #     # If we're under the limit, return as is
-    #     if total_words <= max_summary_length:
-    #         return {"bullets": bullets, "trim_ratio": 0.0}
+        # If we're under the limit, return as is
+        if total_words <= max_summary_length:
+            return {"bullets": bullets, "trim_ratio": 0.0}
             
-    #     # Calculate percentage to trim
-    #     excess_percentage = (total_words - max_summary_length) / total_words
+        # Calculate percentage to trim
+        excess_percentage = (total_words - max_summary_length) / total_words
         
-    #     # Trim each bullet proportionally
-    #     trimmed_bullets = []
-    #     for bullet, word_count in zip(bullets, bullet_word_counts):
-    #         if word_count == 0:
-    #             trimmed_bullets.append(bullet)
-    #             continue
+        # Trim each bullet proportionally
+        trimmed_bullets = []
+        for bullet, word_count in zip(bullets, bullet_word_counts):
+            if word_count == 0:
+                trimmed_bullets.append(bullet)
+                continue
                 
-    #         # Calculate how many words to keep
-    #         words_to_keep = int(word_count * (1 - excess_percentage))
-    #         if words_to_keep < 1:
-    #             words_to_keep = 1
+            # Calculate how many words to keep
+            words_to_keep = int(word_count * (1 - excess_percentage))
+            if words_to_keep < 1:
+                words_to_keep = 1
                 
-    #         # Split into words and rejoin
-    #         words = bullet.split()
-    #         trimmed_bullet = " ".join(words[:words_to_keep])
-    #         trimmed_bullets.append(trimmed_bullet)
+            # Split into words and rejoin
+            words = bullet.split()
+            trimmed_bullet = " ".join(words[:words_to_keep])
+            trimmed_bullets.append(trimmed_bullet)
         
-    #     return {"bullets": trimmed_bullets, "trim_ratio": excess_percentage}
+        return {"bullets": trimmed_bullets, "trim_ratio": excess_percentage}
 
-    # def evaluate_insights(insights, summary, evaluator_model_card, eval_prompt_fn="eval_summhay.txt"):
-    #     with open(eval_prompt_fn, "r") as f:   
-    #         prompt_eval = f.read()
+    def evaluate_insights(self, insights, summary, evaluator_model_card, eval_prompt_fn="eval_summhay.txt"):
+        with open(eval_prompt_fn, "r") as f:   
+            prompt_eval = f.read()
 
-    #     bullets_obj = self.summary2bullets(summary)
-    #     bullets = bullets_obj["bullets"]
-    #     bullets_str = json.dumps({"bullets": [{"bullet_id": i+1, "text": bullet} for i, bullet in enumerate(bullets)]}, indent=1)
-    #     insight_scores = []
-    #     for insight in insights:
-    #         response_all = generate_json([{"role": "user", "content": prompt_eval}], model=evaluator_model_card, return_metadata=True, variables={"BULLETS": bullets_str, "INSIGHT": insight["insight"]})
-    #         response_json  = response_all["message"]
-    #         response_json["insight_id"] = insight["insight_id"] 
-    #         insight_scores.append(response_json)
-    #     return insight_scores
+        bullets_obj = self.summary2bullets(summary)
+        bullets = bullets_obj["bullets"]
+        bullets_str = json.dumps({"bullets": [{"bullet_id": i+1, "text": bullet} for i, bullet in enumerate(bullets)]}, indent=1)
+        insight_scores = []
+        for insight in insights:
+            response_all = generate_json([{"role": "user", "content": prompt_eval}], model=evaluator_model_card, return_metadata=True, variables={"BULLETS": bullets_str, "INSIGHT": insight["insight"]})
+            response_json  = response_all["message"]
+            response_json["insight_id"] = insight["insight_id"] 
+            insight_scores.append(response_json)
+        return insight_scores
 
-    # def build_ref_insight2docids(topic):
-    #     insight_id2references = {}
-    #     for i, doc in enumerate(topic["documents"]):
-    #         doc_id = i + 1
-    #         for insight_id in doc["insights_included"]:
-    #             if insight_id not in insight_id2references:
-    #                 insight_id2references[insight_id] = set([])
-    #             insight_id2references[insight_id].add(doc_id)
+    def build_ref_insight2docids(self, topic):
+        insight_id2references = {}
+        for i, doc in enumerate(topic["documents"]):
+            doc_id = i + 1
+            for insight_id in doc["insights_included"]:
+                if insight_id not in insight_id2references:
+                    insight_id2references[insight_id] = set([])
+                insight_id2references[insight_id].add(doc_id)
 
-    #     insight_id2references = {k: list(v) for k, v in insight_id2references.items()} # make it into a list
-    #     return insight_id2references
+        insight_id2references = {k: list(v) for k, v in insight_id2references.items()} # make it into a list
+        return insight_id2references
 
-    # def extract_citations(bullet):
-    #     # matches digits or commas
-    #     matches = re.findall(r"\[([\d, ]+)\]", bullet)
-    #     ref_ids = []
-    #     for match in matches:
-    #         ref_ids += [int(m.strip()) for m in match.split(",") if len(m.strip()) > 0]
-    #     return ref_ids
+    def extract_citations(self, bullet):
+        # matches digits or commas
+        matches = re.findall(r"\[([\d, ]+)\]", bullet)
+        ref_ids = []
+        for match in matches:
+            ref_ids += [int(m.strip()) for m in match.split(",") if len(m.strip()) > 0]
+        return ref_ids
 
-    # def compute_single_sample_scores(summary, evals, insightid2ref_citations, partial_score=0.5, cite_offset=0): # the cite offset should be one for the annotators (but not for the model eval)
-    #     bullets_obj = self.summary2bullets(summary)
-    #     bullets = bullets_obj["bullets"]
-    #     trim_ratio = bullets_obj["trim_ratio"]
+    def compute_single_sample_scores(self, summary, evals, insightid2ref_citations, partial_score=0.5, cite_offset=0): # the cite offset should be one for the annotators (but not for the model eval)
+        bullets_obj = self.summary2bullets(summary)
+        bullets = bullets_obj["bullets"]
+        trim_ratio = bullets_obj["trim_ratio"]
 
-    #     coverage_scores, citation_scores, joint_scores = [], [], []
-    #     citation_precisions, citation_recalls = [], []
-    #     for e in evals:
-    #         cov_score, cit_score, cit_prec, cit_rec = 0.0, 0.0, 0.0, 0.0
-    #         if e["coverage"] in ["PARTIAL_COVERAGE", "FULL_COVERAGE"]:
-    #             cov_score = 1.0 if e["coverage"] == "FULL_COVERAGE" else partial_score
-    #             insight_id = e["insight_id"]
-    #             try:
-    #                 bullet_match_idx = int(e["bullet_id"])
-    #             except:
-    #                 bullet_match_idx = -1
-    #             bullet_match = bullets[bullet_match_idx - 1]
+        coverage_scores, citation_scores, joint_scores = [], [], []
+        citation_precisions, citation_recalls = [], []
+        for e in evals:
+            cov_score, cit_score, cit_prec, cit_rec = 0.0, 0.0, 0.0, 0.0
+            if e["coverage"] in ["PARTIAL_COVERAGE", "FULL_COVERAGE"]:
+                cov_score = 1.0 if e["coverage"] == "FULL_COVERAGE" else partial_score
+                insight_id = e["insight_id"]
+                try:
+                    bullet_match_idx = int(e["bullet_id"])
+                except:
+                    bullet_match_idx = -1
+                bullet_match = bullets[bullet_match_idx - 1]
 
-    #             gen_citations = set([cite+cite_offset for cite in self.extract_citations(bullet_match)])
-    #             ref_citations = set(insightid2ref_citations[insight_id])
+                gen_citations = set([cite+cite_offset for cite in self.extract_citations(bullet_match)])
+                ref_citations = set(insightid2ref_citations[insight_id])
 
-    #             P = 0 if len(gen_citations) == 0 else len(gen_citations & ref_citations) / len(gen_citations)
-    #             R = 0 if len(ref_citations) == 0 else len(gen_citations & ref_citations) / len(ref_citations)
-    #             F1 = 0 if P + R == 0 else 2 * P * R / (P + R)
-    #             cit_prec, cit_rec, cit_score = P, R, F1
-    #             citation_scores.append(cit_score)
-    #             citation_precisions.append(cit_prec)
-    #             citation_recalls.append(cit_rec)
+                P = 0 if len(gen_citations) == 0 else len(gen_citations & ref_citations) / len(gen_citations)
+                R = 0 if len(ref_citations) == 0 else len(gen_citations & ref_citations) / len(ref_citations)
+                F1 = 0 if P + R == 0 else 2 * P * R / (P + R)
+                cit_prec, cit_rec, cit_score = P, R, F1
+                citation_scores.append(cit_score)
+                citation_precisions.append(cit_prec)
+                citation_recalls.append(cit_rec)
 
-    #         coverage_scores.append(cov_score)
-    #         joint_scores.append(cov_score * cit_score)
-    #     return {"coverage_score": coverage_scores, "citation_score": citation_scores, "joint_score": joint_scores, "citation_precision": citation_precisions, "citation_recall": citation_recalls, "trim_ratio": trim_ratio}
+            coverage_scores.append(cov_score)
+            joint_scores.append(cov_score * cit_score)
+        return {"coverage_score": coverage_scores, "citation_score": citation_scores, "joint_score": joint_scores, "citation_precision": citation_precisions, "citation_recall": citation_recalls, "trim_ratio": trim_ratio}
 
-    # def compute_single_sample_results(summary, evals, insightid2ref_citations, partial_score=0.5, cite_offset=0):
-    #     scores = self.compute_single_sample_scores(summary, evals, insightid2ref_citations, partial_score, cite_offset=cite_offset)
-    #     return {k: np.mean(v).item() for k, v in scores.items()}
+    def compute_single_sample_results(self, summary, evals, insightid2ref_citations, partial_score=0.5, cite_offset=0):
+        scores = self.compute_single_sample_scores(summary, evals, insightid2ref_citations, partial_score, cite_offset=cite_offset)
+        return {k: np.mean(v).item() for k, v in scores.items()}

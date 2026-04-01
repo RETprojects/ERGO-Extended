@@ -6,6 +6,7 @@ from typing import List, Dict, Any, Tuple
 from transformers import AutoTokenizer, AutoModelForCausalLM, logging
 import torch
 import sys
+import json
 
 # logging.set_verbosity_info()
 
@@ -175,6 +176,12 @@ class OpenAIModel(BaseModel):
         # tokens_used = resp.usage.completion_tokens + resp.usage.prompt_tokens
 
         return avg_entropy, avg_probability, perplexity, generated_text#, tokens_used
+
+    # from lost-in-conversation/model-openai.py
+    def generate_json(self, messages, model="gpt-4o-mini", **kwargs):
+        response = self.generate(messages, model, is_json=True, **kwargs)
+        response["message"] = json.loads(response["message"])
+        return response
 
     def compute_entropy(self, token_logprobs):
         entropies = []
