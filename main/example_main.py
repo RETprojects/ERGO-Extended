@@ -8,7 +8,7 @@ import torch
 # otherwise it will try to load the model locally with HuggingFace
 
 Example_Experiment = RunExperiment(
-    model_name="microsoft/phi-4", 
+    model_name="meta-llama/Meta-Llama-3.1-8B-Instruct", 
     device="cuda" if torch.cuda.is_available() else "cpu", # thanks to MBT: https://stackoverflow.com/a/53374933
     device_map=None, 
     max_new_tokens=1000, 
@@ -21,5 +21,5 @@ Example_Experiment.run_Summary(
     num_Qs=100, 
     num_runs=3, 
     threshold=0.001, 
-    output_path="outputs/summary_example_3signals.json"
+    output_path="outputs/summary_example_3signals_llama.json"
 )
