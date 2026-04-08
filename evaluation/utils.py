@@ -12,6 +12,8 @@ import numpy as np
 import time
 # from core.model import generate_json
 # import core.model as model
+from transformers import pipeline
+import torch
 
 
 class EvalUtils:
@@ -430,7 +432,7 @@ class SummaryEvalUtils(EvalUtils):
 
     def evaluator_function(self, extracted_answer, sample):
         # evaluator_model_card = "t-gpt-4o" if os.environ.get("USE_TRAPI", "0") == "1" else "gpt-4o"
-        evaluator_model_card = "gpt-oss-120b"
+        evaluator_model_card = "open-ai/gpt-oss-120b"
         evals = self.evaluate_insights(sample["insights"], extracted_answer, evaluator_model_card, os.path.abspath("evaluation/eval_summhay.txt"))
         # eval should likely be cached somewhere, so results can be explained if needed
         results = self.compute_single_sample_results(extracted_answer, evals, sample["insightid2ref_citations"])
@@ -538,7 +540,7 @@ class SummaryEvalUtils(EvalUtils):
         bullets_str = json.dumps({"bullets": [{"bullet_id": i+1, "text": bullet} for i, bullet in enumerate(bullets)]}, indent=1)
         insight_scores = []
         for insight in insights:
-            response_all = self.generate_json([{"role": "user", "content": prompt_eval}], model=evaluator_model_card, return_metadata=True, variables={"BULLETS": bullets_str, "INSIGHT": insight["insight"]})
+            response_all = self.generate_json(messages=[{"role": "user", "content": prompt_eval}], model=evaluator_model_card, return_metadata=True, variables={"BULLETS": bullets_str, "INSIGHT": insight["insight"]})
             response_json  = response_all["message"]
             response_json["insight_id"] = insight["insight_id"] 
             insight_scores.append(response_json)
@@ -603,7 +605,7 @@ class SummaryEvalUtils(EvalUtils):
     
     # from lost-in-conversation/model-openai.py
     def generate_json(self, messages, model="gpt-4o-mini", **kwargs):
-        response = self.generate(messages, model, is_json=True, **kwargs)
+        response = self.generate(messages=messages, model=model, is_json=True, **kwargs)
         response["message"] = json.loads(response["message"])
         return response
     
@@ -623,7 +625,17 @@ class SummaryEvalUtils(EvalUtils):
 
         while True:
             try:
-                response = self.client.chat.completions.create(model=model, messages=messages, timeout=timeout, max_completion_tokens=max_tokens, temperature=temperature, **kwargs)
+                # response = self.client.chat.completions.create(model=model, messages=messages, timeout=timeout, max_completion_tokens=max_tokens, temperature=temperature, **kwargs)
+                pipe = pipeline(
+                    "text-generation",
+                    model=model,
+                    torch_dtype="auto",
+                    device_map="auto",
+                )
+                response = pipe(
+                    messages,
+                    max_new_tokens=256,
+                )[0]["generated_text"][-1]
                 break
             except:
                 N += 1
@@ -644,7 +656,7 @@ class SummaryEvalUtils(EvalUtils):
             return response_text
         return {"message": response_text, "total_tokens": usage['total_tokens'], "prompt_tokens": usage['prompt_tokens'], "prompt_tokens_cached": prompt_tokens_cached, "completion_tokens": usage['completion_tokens'], "total_usd": total_usd}
 
-    def format_messages(messages, variables={}):
+    def format_messages(self, messages, variables={}):
         last_user_msg = [msg for msg in messages if msg["role"] == "user"][-1]
 
         for k, v in variables.items():
