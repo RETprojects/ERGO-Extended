@@ -16,10 +16,10 @@ Example_Experiment = RunExperiment(
     clear_cache=True
 )
 
-Example_Experiment.run_Summary(
+Example_Experiment.run_Code(
     dataset_path="sharded_dataset.json", # Path to sharded dataset from Laban et al.
     num_Qs=100, 
     num_runs=3, 
     threshold=0.001, 
-    output_path="outputs/summary_example_3signals_llama.json"
+    output_path="outputs/code_example_3signals_llama.json"
 )
