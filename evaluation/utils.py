@@ -12,7 +12,7 @@ import numpy as np
 import time
 # from core.model import generate_json
 # import core.model as model
-from transformers import pipeline
+from transformers import pipeline, AutoModelForCausalLM, AutoTokenizer
 import torch
 
 
@@ -626,16 +626,42 @@ class SummaryEvalUtils(EvalUtils):
         while True:
             try:
                 # response = self.client.chat.completions.create(model=model, messages=messages, timeout=timeout, max_completion_tokens=max_tokens, temperature=temperature, **kwargs)
-                pipe = pipeline(
-                    "text-generation",
-                    model=model,
+                # pipe = pipeline(
+                #     "text-generation",
+                #     model=model,
+                #     torch_dtype="auto",
+                #     device_map="auto",
+                # )
+                # response = pipe(
+                #     messages,
+                #     max_new_tokens=256,
+                # )[0]["generated_text"][-1]
+                # thanks to Dominik Kundel: https://developers.openai.com/cookbook/articles/gpt-oss/run-transformers
+                tokenizer = AutoTokenizer.from_pretrained(model)
+                eval_model = AutoModelForCausalLM.from_pretrained(
+                    model,
                     torch_dtype="auto",
-                    device_map="auto",
+                    device_map="auto"
                 )
-                response = pipe(
+
+                messages = [
+                    {"role": "user", "content": "Explain what MXFP4 quantization is."},
+                ]
+
+                inputs = tokenizer.apply_chat_template(
                     messages,
-                    max_new_tokens=256,
-                )[0]["generated_text"][-1]
+                    add_generation_prompt=True,
+                    return_tensors="pt",
+                    return_dict=True,
+                ).to(eval_model.device)
+
+                outputs = eval_model.generate(
+                    **inputs,
+                    max_new_tokens=200,
+                    temperature=0.7
+                )
+
+                response = tokenizer.decode(outputs[0])
                 break
             except:
                 N += 1
