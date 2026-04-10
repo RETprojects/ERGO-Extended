@@ -67,8 +67,6 @@ class Ergo:
 
     def run(self, sharded_prompt, dataset: Dataset, prev_entropy, prev_probability, prev_perplexity):
         """
-        TODO:
-        - Determine thresholds for each of the 3 signals
         Run ERGO on a prompt:
         - Generate response
         - Check entropy, probability, perplexity
@@ -78,7 +76,7 @@ class Ergo:
         reset = False
         prev_prompts = None
         
-        # if change in entropy >= threshold, change in probability <= -threshold, or change in perplexity > threshold
+        # if change in entropy >= threshold, change in probability <= threshold, or change in perplexity > threshold
         if avg_entropy - prev_entropy >= self.threshold_H or avg_probability - prev_probability <= self.threshold_p or perplexity - prev_perplexity >= self.threshold_PPL:
             reset = True
             rewritten = self.rewrite_prompt(sharded_prompt, dataset)
