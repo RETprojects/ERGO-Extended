@@ -9,9 +9,11 @@ class Ergo:
     
     def __init__(self, model: BaseModel, threshold, threshold_H=0.5, threshold_p=-0.05, threshold_PPL=15):
         """
-        Initialize ERGO with a model and entropy threshold.
+        Initialize ERGO with a model, entropy threshold, probability threshold, and perplexity threshold.
         model: Any BaseModel (OpenAIModel, LocalModel)
-        threshold: Threshold 𝚫Entropy must exceed to trigger rewriting.
+        threshold_H: Threshold 𝚫Entropy must exceed to trigger rewriting.
+        threshold_p: Threshold 𝚫Probability must fall below to trigger rewriting.
+        threshold_PPL: Threshold 𝚫Perplexity must exceed to trigger rewriting.
         rewrite_prompts: Dataset specific few-shot prompts for rewriting. (retrieved from prompts.py)
         """
 
