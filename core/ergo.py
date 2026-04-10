@@ -7,7 +7,7 @@ import re
 
 class Ergo:
     
-    def __init__(self, model: BaseModel, threshold, threshold_H=0.5, threshold_p=-0.05, threshold_PPL=15):
+    def __init__(self, model: BaseModel, threshold_H=0.5, threshold_p=-0.05, threshold_PPL=15):
         """
         Initialize ERGO with a model, entropy threshold, probability threshold, and perplexity threshold.
         model: Any BaseModel (OpenAIModel, LocalModel)
@@ -18,7 +18,6 @@ class Ergo:
         """
 
         self.model = model
-        self.threshold = threshold
         self.threshold_H = threshold_H # Shannon entropy threshold; trigger rewriting when 𝚫Entropy exceeds this (signal of high uncertainity)
         self.threshold_p = threshold_p # token probability threshold; trigger rewriting when 𝚫Probability falls below this (signal of low confidence)
         self.threshold_PPL = threshold_PPL # perplexity threshold; trigger rewriting when 𝚫Perplexity exceeds this (signal of better predictability)
