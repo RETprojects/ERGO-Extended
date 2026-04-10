@@ -10,7 +10,6 @@ class Ergo:
     def __init__(self, model: BaseModel, threshold, threshold_H=0.5, threshold_p=-0.05, threshold_PPL=15):
         """
         Initialize ERGO with a model and entropy threshold.
-        TODO: thresholds for all 3 signals
         model: Any BaseModel (OpenAIModel, LocalModel)
         threshold: Threshold 𝚫Entropy must exceed to trigger rewriting.
         rewrite_prompts: Dataset specific few-shot prompts for rewriting. (retrieved from prompts.py)
@@ -79,7 +78,7 @@ class Ergo:
         prev_prompts = None
         
         # if change in entropy >= threshold, change in probability <= -threshold, or change in perplexity > threshold
-        if avg_entropy - prev_entropy >= self.threshold or avg_probability - prev_probability <= -self.threshold or perplexity - prev_perplexity >= self.threshold:
+        if avg_entropy - prev_entropy >= self.threshold_H or avg_probability - prev_probability <= self.threshold_p or perplexity - prev_perplexity >= self.threshold_PPL:
             reset = True
             rewritten = self.rewrite_prompt(sharded_prompt, dataset)
             _, _, _, rewritten_context = self.model.generate(rewritten)
