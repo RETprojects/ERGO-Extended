@@ -23,5 +23,5 @@ Example_Experiment.run_Code(
     threshold_H=0.5, 
     threshold_p=-0.05, 
     threshold_PPL=15, 
-    output_path="outputs/code_example_3signals_llama.json"
+    output_path="outputs/code_example_3signals_thresholds_llama.json"
 )
