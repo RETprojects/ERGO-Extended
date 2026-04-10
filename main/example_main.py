@@ -20,6 +20,8 @@ Example_Experiment.run_Code(
     dataset_path="sharded_dataset.json", # Path to sharded dataset from Laban et al.
     num_Qs=100, 
     num_runs=3, 
-    threshold=0.001, 
+    threshold_H=0.5, 
+    threshold_p=-0.05, 
+    threshold_PPL=15, 
     output_path="outputs/code_example_3signals_llama.json"
 )
