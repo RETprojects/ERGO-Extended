@@ -18,13 +18,15 @@ class Logger:
 
         self.logs = []
 
-    def log_entry(self, item_id, chat_history, final_output, entropy, resets, result, message_history):
+    def log_entry(self, item_id, chat_history, final_output, entropy, probability, perplexity, resets, result, message_history):
         """
         Log a single entry consisting of:
         - item_id: unique identifier for the data item
         - chat_history: list of (user_message, model_response) tuples
         - final_output: final response from the model
         - entropy: list of entropy values for each model response
+        - probability: list of token probability values for each model response
+        - perplexity: list of perplexity values for each model response
         - resets: array 0 and 1 indicating which shard reset was triggered
         - message_history: list of previous message histories before resets
         """
@@ -33,6 +35,8 @@ class Logger:
             "chat_history": chat_history,
             "final_output": final_output,
             "entropies": entropy,
+            "probabilities": probability,
+            "perplexities": perplexity,
             "resets": resets,
             "result": result,
             "message_history": message_history
