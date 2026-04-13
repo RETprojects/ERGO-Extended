@@ -64,7 +64,7 @@ class Ergo:
             if msg[0] == "user":
                 user_content += f"User Instruction {i+1}: {msg[1]}\n"
             else:
-                user_content += f"Assistant Response {i+1}: {msg[1]}\n"
+                user_content += f"Your Response {i+1}: {msg[1]}\n"
 
 
         new_prompt.append({"role": "user", "content": user_content})
