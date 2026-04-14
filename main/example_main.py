@@ -16,10 +16,10 @@ Example_Experiment = RunExperiment(
     clear_cache=True
 )
 
-Example_Experiment.run_GSM8K(
+Example_Experiment.run_Actions(
     dataset_path="sharded_dataset.json", # Path to sharded dataset from Laban et al.
     num_Qs=100, 
     num_runs=3, 
-    threshold=0.5, 
-    output_path="outputs/math_example_ergo_llama.json"
+    threshold=0.03, 
+    output_path="outputs/actions_example_ergo_selectthreshold_llama.json"
 )
