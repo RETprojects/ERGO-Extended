@@ -18,7 +18,7 @@ class Logger:
 
         self.logs = []
 
-    def log_entry(self, item_id, chat_history, final_output, entropy, resets, result, message_history):
+    def log_entry(self, item_id, chat_history, final_output, entropy, probability, perplexity, resets, result, message_history):
         """
         Log a single entry consisting of:
         - item_id: unique identifier for the data item
@@ -33,6 +33,8 @@ class Logger:
             "chat_history": chat_history,
             "final_output": final_output,
             "entropies": entropy,
+            "probabilities": probability,
+            "perplexities": perplexity,
             "resets": resets,
             "result": result,
             "message_history": message_history

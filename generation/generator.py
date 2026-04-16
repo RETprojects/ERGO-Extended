@@ -77,7 +77,7 @@ class RunERGO():
                         if self.evaluator.identifier() == "DataToText":
                             result = self.evaluator.evaluate(dataset=self.dataset, extracted_answer=new_message, question_id=question)
 
-                        self.logger.log_entry(question, messages, new_message, entropies, resets, result, message_history)
+                        self.logger.log_entry(question, messages, new_message, entropies, probabilities, perplexities, resets, result, message_history)
                         self.logger.save(run)
                     
                         if clear_cache:
