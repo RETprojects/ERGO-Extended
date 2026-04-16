@@ -21,7 +21,7 @@ Example_Experiment.run_Actions(
     num_Qs=100, 
     num_runs=3, 
     threshold_H=0.03, 
-    threshold_p=-0.05, 
-    threshold_PPL=15, 
+    threshold_p=-0.1, 
+    threshold_PPL=50, 
     output_path="outputs/actions_example_3signals_newthresholds_llama.json"
 )
