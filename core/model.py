@@ -1,5 +1,6 @@
 # core/model.py
 from openai import OpenAI
+from anthropic import Anthropic
 import math
 import os
 from typing import List, Dict, Any, Tuple
@@ -162,6 +163,80 @@ class OpenAIModel(BaseModel):
             temperature=self.temperature,
             logprobs=True,
             top_logprobs=self.top_logprobs,
+        )
+
+        generated_text = resp.choices[0].message.content
+        try: 
+            token_logprobs = resp.choices[0].logprobs.content
+        except:
+            sys.exit("ERROR: INPUTTED OPENAI MODEL DOESNT RETURN LOGPROBS")
+
+        avg_entropy = self.compute_entropy(token_logprobs)
+        avg_probability = self.compute_probability(token_logprobs)
+        perplexity = self.compute_perplexity(token_logprobs)
+        # tokens_used = resp.usage.completion_tokens + resp.usage.prompt_tokens
+
+        return avg_entropy, avg_probability, perplexity, generated_text#, tokens_used
+
+    # from lost-in-conversation/model-openai.py
+    # def generate_json(self, messages, model="gpt-4o-mini", **kwargs):
+    #     response = self.generate(messages, model, is_json=True, **kwargs)
+    #     response["message"] = json.loads(response["message"])
+    #     return response
+
+    def compute_entropy(self, token_logprobs):
+        entropies = []
+        for token_info in token_logprobs:
+            entropy = 0.0
+            for logprob in token_info.top_logprobs.values():
+                p = math.exp(logprob)
+                entropy += -p * logprob
+            entropies.append(entropy)
+
+        avg_entropy = sum(entropies) / len(entropies) if entropies else 0.0
+        return avg_entropy
+    
+    def compute_probability(self, token_logprobs):
+        probabilities = []
+        for token_info in token_logprobs:
+            probability = 1.0
+            for logprob in token_info.top_logprobs.values():
+                probability *= logprob
+            probabilities.append(math.exp(probability))
+
+        avg_probability = sum(probabilities) / len(probabilities) if probabilities else 0.0
+        return avg_probability
+    
+    def compute_perplexity(self, token_logprobs):
+        inv_probabilities = []
+        for token_info in token_logprobs:
+            probability = 1.0
+            for logprob in token_info.top_logprobs.values():
+                probability *= logprob
+            inv_probabilities.append(1.0 / math.exp(probability))
+
+        perplexity = sum(inv_probabilities) / len(inv_probabilities) if inv_probabilities else 0.0
+        return perplexity
+
+class ClaudeModel(BaseModel):
+
+    def __init__(self, model_name, temperature, max_tokens):
+        super().__init__(model_name)
+        self.client = Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"),)
+        self.temperature = temperature
+        self.max_tokens = max_tokens
+
+    def generate(self, prompt: List[Dict[str, str]]):
+        """
+        Sends a prompt to Claude API and returns:
+        (average_entropy, average_probability, perplexity, generated_text)
+        """
+
+        resp = self.client.messages.create(
+            max_tokens=self.max_tokens,
+            messages=prompt,
+            model="claude-sonnet-4-6",
+            temperature=self.temperature,
         )
 
         generated_text = resp.choices[0].message.content
