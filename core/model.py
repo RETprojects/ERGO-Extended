@@ -237,12 +237,6 @@ class ClaudeModel(BaseModel):
         (average_entropy, average_probability, perplexity, generated_text)
         """
 
-        # resp = self.client.messages.create(
-        #     max_tokens=self.max_tokens,
-        #     messages=prompt,
-        #     model="claude-sonnet-4-6",
-        #     temperature=self.temperature,
-        # )
         resp = self.client.chat.completions.create(
             model="claude-sonnet-4-6",  # Claude model name
             messages=prompt,
