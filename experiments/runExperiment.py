@@ -1,4 +1,4 @@
-from core.model import OpenAIModel, LocalLLMModel
+from core.model import OpenAIModel, LocalLLMModel, ClaudeModel
 from core.dataset import GSM8K, Database, Code, Actions, DataToText, Summary
 from core.ergo import Ergo
 from core.utils import Logger
@@ -10,11 +10,17 @@ class RunExperiment():
     Initialize an experiment with a model (local or OpenAI) and run on a specified dataset.
     """
 
-    def __init__(self, model_name, device="cuda", device_map="auto", max_new_tokens=1024, dtype="float16", temperature=1.0, do_sample=True, openai=False, clear_cache=True):
+    def __init__(self, model_name, device="cuda", device_map="auto", max_new_tokens=1024, dtype="float16", temperature=1.0, do_sample=True, openai=False, claude=False, clear_cache=True):
         self.model_name = model_name
         self.clear_cache = clear_cache
         if openai:
             self.model = OpenAIModel(
+                model_name=model_name,
+                temperature=temperature,
+                max_tokens=max_new_tokens
+            )
+        elif claude:
+            self.model = ClaudeModel(
                 model_name=model_name,
                 temperature=temperature,
                 max_tokens=max_new_tokens
