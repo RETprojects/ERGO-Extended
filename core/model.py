@@ -220,11 +220,16 @@ class OpenAIModel(BaseModel):
 
 class ClaudeModel(BaseModel):
 
-    def __init__(self, model_name, temperature, max_tokens):
+    def __init__(self, model_name, temperature, max_tokens, top_logprobs: int = 20):
         super().__init__(model_name)
-        self.client = Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"),)
+        # self.client = Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"),)
+        self.client = OpenAI(
+            api_key=os.environ.get("ANTHROPIC_API_KEY"),  # Your Claude API key
+            base_url="https://api.anthropic.com/v1/",  # the Claude API endpoint
+        )
         self.temperature = temperature
         self.max_tokens = max_tokens
+        self.top_logprobs = top_logprobs
 
     def generate(self, prompt: List[Dict[str, str]]):
         """
@@ -232,11 +237,19 @@ class ClaudeModel(BaseModel):
         (average_entropy, average_probability, perplexity, generated_text)
         """
 
-        resp = self.client.messages.create(
-            max_tokens=self.max_tokens,
+        # resp = self.client.messages.create(
+        #     max_tokens=self.max_tokens,
+        #     messages=prompt,
+        #     model="claude-sonnet-4-6",
+        #     temperature=self.temperature,
+        # )
+        resp = self.client.chat.completions.create(
+            model="claude-sonnet-4-6",  # Claude model name
             messages=prompt,
-            model="claude-sonnet-4-6",
+            max_completion_tokens=self.max_tokens,
             temperature=self.temperature,
+            logprobs=True,
+            top_logprobs=self.top_logprobs,
         )
 
         generated_text = resp.choices[0].message.content
