@@ -8,6 +8,8 @@ from transformers import AutoTokenizer, AutoModelForCausalLM, logging
 import torch
 import sys
 import json
+import boto3
+import base64
 
 # logging.set_verbosity_info()
 
@@ -223,10 +225,11 @@ class ClaudeModel(BaseModel):
     def __init__(self, model_name, temperature, max_tokens, top_logprobs: int = 20):
         super().__init__(model_name)
         # self.client = Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"),)
-        self.client = OpenAI(
-            api_key=os.environ.get("ANTHROPIC_API_KEY"),  # Your Claude API key
-            base_url="https://api.anthropic.com/v1/",  # the Claude API endpoint
-        )
+        # self.client = OpenAI(
+        #     api_key=os.environ.get("ANTHROPIC_API_KEY"),  # Your Claude API key
+        #     base_url="https://api.anthropic.com/v1/",  # the Claude API endpoint
+        # )
+        self.client = boto3.client('bedrock-runtime', region_name='eu-west-3')
         self.temperature = temperature
         self.max_tokens = max_tokens
         self.top_logprobs = top_logprobs
@@ -237,20 +240,40 @@ class ClaudeModel(BaseModel):
         (average_entropy, average_probability, perplexity, generated_text)
         """
 
-        resp = self.client.chat.completions.create(
-            model="claude-sonnet-4-6",  # Claude model name
-            messages=prompt,
-            max_completion_tokens=self.max_tokens,
-            temperature=self.temperature,
-            logprobs=True,
-            top_logprobs=self.top_logprobs,
+        # resp = self.client.chat.completions.create(
+        #     model="claude-sonnet-4-6",  # Claude model name
+        #     messages=prompt,
+        #     max_completion_tokens=self.max_tokens,
+        #     temperature=self.temperature,
+        #     logprobs=True,
+        #     top_logprobs=self.top_logprobs,
+        # )
+
+        # thanks to the Amazon Bedrock docs: https://docs.aws.amazon.com/bedrock/latest/userguide/custom-model-import-advanced-features.html
+
+        payload = {
+            "messages": prompt,
+            "max_tokens": self.max_tokens,
+            "temperature": self.temperature,
+            "logprobs": True,
+            "top_logprobs": self.top_logprobs,
+            "prompt_logprobs": 1
+        }
+
+        response = self.client.invoke_model(
+            modelId=self.model_name,
+            body=json.dumps(payload),
+            accept='application/json',
+            contentType='application/json'
         )
+
+        resp = json.loads(response['body'].read())
 
         generated_text = resp.choices[0].message.content
         try: 
             token_logprobs = resp.choices[0].logprobs.content
         except:
-            sys.exit("ERROR: INPUTTED OPENAI MODEL DOESNT RETURN LOGPROBS")
+            sys.exit("ERROR: INPUTTED CLAUDE MODEL DOESNT RETURN LOGPROBS")
 
         avg_entropy = self.compute_entropy(token_logprobs)
         avg_probability = self.compute_probability(token_logprobs)
