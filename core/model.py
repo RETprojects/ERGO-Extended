@@ -234,7 +234,7 @@ class ClaudeModel(BaseModel):
         self.max_tokens = max_tokens
         self.top_logprobs = top_logprobs
 
-    def generate(self, prompt: List[Dict[str, str]]):
+    def generate(self, prompt: List[Dict[str, str]], system: str):
         """
         Sends a prompt to Claude API and returns:
         (average_entropy, average_probability, perplexity, generated_text)
@@ -251,14 +251,25 @@ class ClaudeModel(BaseModel):
 
         # thanks to the Amazon Bedrock docs: https://docs.aws.amazon.com/bedrock/latest/userguide/custom-model-import-advanced-features.html
 
-        payload = {
-            "messages": prompt,
-            "max_tokens": self.max_tokens,
-            "temperature": self.temperature,
-            "logprobs": True,
-            "top_logprobs": self.top_logprobs,
-            "prompt_logprobs": 1
-        }
+        if "claude" in self.model_name:
+            payload = {
+                "system": system,
+                "messages": prompt,
+                "max_tokens": self.max_tokens,
+                "temperature": self.temperature,
+                "logprobs": True,
+                "top_logprobs": self.top_logprobs,
+                "prompt_logprobs": 1
+            }
+        else:
+            payload = {
+                "messages": prompt,
+                "max_tokens": self.max_tokens,
+                "temperature": self.temperature,
+                "logprobs": True,
+                "top_logprobs": self.top_logprobs,
+                "prompt_logprobs": 1
+            }
 
         response = self.client.invoke_model(
             modelId=self.model_name,

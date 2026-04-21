@@ -1,5 +1,5 @@
 # core/ergo.py
-from .model import BaseModel
+from .model import BaseModel, ClaudeModel
 from .dataset import Dataset
 from .prompts import GSM8K_prompt, Code_prompt, D2T_prompt, DB_prompt, Summary_prompt
 import re
@@ -10,7 +10,7 @@ class Ergo:
     def __init__(self, model: BaseModel, threshold_H=0.5, threshold_p=-0.05, threshold_PPL=15):
         """
         Initialize ERGO with a model, entropy threshold, probability threshold, and perplexity threshold.
-        model: Any BaseModel (OpenAIModel, LocalModel)
+        model: Any BaseModel (OpenAIModel, LocalModel, ClaudeModel)
         threshold_H: Threshold 𝚫Entropy must exceed to trigger rewriting.
         threshold_p: Threshold 𝚫Probability must fall below to trigger rewriting.
         threshold_PPL: Threshold 𝚫Perplexity must exceed to trigger rewriting.
@@ -22,15 +22,25 @@ class Ergo:
         self.threshold_p = threshold_p # token probability threshold; trigger rewriting when 𝚫Probability falls below this (signal of low confidence)
         self.threshold_PPL = threshold_PPL # perplexity threshold; trigger rewriting when 𝚫Perplexity exceeds this (signal of better predictability)
 
-        
-        self.rewrite_prompts = {
-            "GSM8K": GSM8K_prompt,
-            "Database": DB_prompt,
-            "Code": Code_prompt,
-            "Actions": GSM8K_prompt, # We reused GSM8K prompt for Actions
-            "DataToText": D2T_prompt,
-            "Summary": Summary_prompt
-        }
+        # if model is Claude, we need to pass in the system prompt in a different way
+        if isinstance(model, ClaudeModel):
+            self.rewrite_prompts = {
+                "GSM8K": GSM8K_prompt,
+                "Database": DB_prompt,
+                "Code": Code_prompt,
+                "Actions": GSM8K_prompt, # We reused GSM8K prompt for Actions
+                "DataToText": D2T_prompt,
+                "Summary": Summary_prompt
+            }
+        else:
+            self.rewrite_prompts = {
+                "GSM8K": GSM8K_prompt,
+                "Database": DB_prompt,
+                "Code": Code_prompt,
+                "Actions": GSM8K_prompt, # We reused GSM8K prompt for Actions
+                "DataToText": D2T_prompt,
+                "Summary": Summary_prompt
+            }
 
     def rewrite_prompt(self, prompt, dataset: Dataset):
         """
