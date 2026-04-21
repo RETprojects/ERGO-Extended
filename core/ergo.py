@@ -93,7 +93,7 @@ class Ergo:
         - If 1+ signals surpass their threshold, rewrite prompt, start new context with just rewritten prompt and regenerate
         """
         if isinstance(self.model, ClaudeModel):
-            system = self.system_prompts.get(dataset.dataset_name, []).copy()
+            system = self.system_prompts.get(dataset.dataset_name, [])
             avg_entropy, avg_probability, perplexity, response = self.model.generate(sharded_prompt, system=system)
         else:
             avg_entropy, avg_probability, perplexity, response = self.model.generate(sharded_prompt)
@@ -109,7 +109,7 @@ class Ergo:
             prev_prompts = sharded_prompt.copy()
 
             if isinstance(self.model, ClaudeModel):
-                # system = self.system_prompts.get(dataset.dataset_name, []).copy()
+                # system = self.system_prompts.get(dataset.dataset_name, [])
                 rewritten_context = re.sub(r"<think>[\s\S]*?(?:</think>|$)", "", rewritten_context, flags=re.DOTALL)
 
                 sharded_prompt = [{"role": "user", "content": rewritten_context}]
