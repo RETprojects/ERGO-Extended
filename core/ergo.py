@@ -109,7 +109,6 @@ class Ergo:
             prev_prompts = sharded_prompt.copy()
 
             if isinstance(self.model, ClaudeModel):
-                # system = self.system_prompts.get(dataset.dataset_name, [])
                 rewritten_context = re.sub(r"<think>[\s\S]*?(?:</think>|$)", "", rewritten_context, flags=re.DOTALL)
 
                 sharded_prompt = [{"role": "user", "content": rewritten_context}]

@@ -251,25 +251,15 @@ class ClaudeModel(BaseModel):
 
         # thanks to the Amazon Bedrock docs: https://docs.aws.amazon.com/bedrock/latest/userguide/custom-model-import-advanced-features.html
 
-        if "claude" in self.model_name:
-            payload = {
-                "system": system,
-                "messages": prompt,
-                "max_tokens": self.max_tokens,
-                "temperature": self.temperature,
-                "logprobs": True,
-                "top_logprobs": self.top_logprobs,
-                "prompt_logprobs": 1
-            }
-        else:
-            payload = {
-                "messages": prompt,
-                "max_tokens": self.max_tokens,
-                "temperature": self.temperature,
-                "logprobs": True,
-                "top_logprobs": self.top_logprobs,
-                "prompt_logprobs": 1
-            }
+        payload = {
+            "system": system,
+            "messages": prompt,
+            "max_tokens": self.max_tokens,
+            "temperature": self.temperature,
+            "logprobs": True,
+            "top_logprobs": self.top_logprobs,
+            "prompt_logprobs": 1
+        }
 
         response = self.client.invoke_model(
             modelId=self.model_name,
