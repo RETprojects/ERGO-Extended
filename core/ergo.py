@@ -1,7 +1,9 @@
 # core/ergo.py
 from .model import BaseModel, ClaudeModel
 from .dataset import Dataset
-from .prompts import GSM8K_prompt, Code_prompt, D2T_prompt, DB_prompt, Summary_prompt
+from .prompts import (GSM8K_prompt, Code_prompt, D2T_prompt, DB_prompt, Summary_prompt, 
+    GSM8K_prompt_claude, Code_prompt_claude, D2T_prompt_claude, DB_prompt_claude, Summary_prompt_claude,
+    GSM8K_system_claude, Code_system_claude, D2T_system_claude, DB_system_claude, Summary_system_claude)
 import re
 
 
@@ -25,12 +27,20 @@ class Ergo:
         # if model is Claude, we need to pass in the system prompt in a different way
         if isinstance(model, ClaudeModel):
             self.rewrite_prompts = {
-                "GSM8K": GSM8K_prompt,
-                "Database": DB_prompt,
-                "Code": Code_prompt,
-                "Actions": GSM8K_prompt, # We reused GSM8K prompt for Actions
-                "DataToText": D2T_prompt,
-                "Summary": Summary_prompt
+                "GSM8K": GSM8K_prompt_claude,
+                "Database": DB_prompt_claude,
+                "Code": Code_prompt_claude,
+                "Actions": GSM8K_prompt_claude, # We reused GSM8K prompt for Actions
+                "DataToText": D2T_prompt_claude,
+                "Summary": Summary_prompt_claude
+            }
+            self.system_prompts = {
+                "GSM8K": GSM8K_system_claude,
+                "Database": DB_system_claude,
+                "Code": Code_system_claude,
+                "Actions": GSM8K_system_claude,
+                "DataToText": D2T_system_claude,
+                "Summary": Summary_system_claude
             }
         else:
             self.rewrite_prompts = {
@@ -94,11 +104,18 @@ class Ergo:
 
             prev_prompts = sharded_prompt.copy()
 
-            sharded_prompt = [msg for msg in sharded_prompt if msg["role"] == "system"]
-            rewritten_context = re.sub(r"<think>[\s\S]*?(?:</think>|$)", "", rewritten_context, flags=re.DOTALL)
+            if isinstance(self.model, ClaudeModel):
+                system = self.system_prompts.get(dataset.dataset_name, []).copy()
+                rewritten_context = re.sub(r"<think>[\s\S]*?(?:</think>|$)", "", rewritten_context, flags=re.DOTALL)
 
-            sharded_prompt.append({"role": "user", "content": rewritten_context})
-            avg_entropy, avg_probability, perplexity, response = self.model.generate(sharded_prompt)
+                sharded_prompt = [{"role": "user", "content": rewritten_context}]
+                avg_entropy, avg_probability, perplexity, response = self.model.generate(sharded_prompt, system=system)
+            else:
+                sharded_prompt = [msg for msg in sharded_prompt if msg["role"] == "system"]
+                rewritten_context = re.sub(r"<think>[\s\S]*?(?:</think>|$)", "", rewritten_context, flags=re.DOTALL)
+
+                sharded_prompt.append({"role": "user", "content": rewritten_context})
+                avg_entropy, avg_probability, perplexity, response = self.model.generate(sharded_prompt)
 
         response = re.sub(r"<think>[\s\S]*?(?:</think>|$)", "", response, flags=re.DOTALL)
 

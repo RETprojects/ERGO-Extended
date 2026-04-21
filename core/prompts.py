@@ -180,6 +180,8 @@ GSM8K_prompt_claude = [
     },
 ]
 
+GSM8K_system_claude = "You are a prompt rewriter whose main goal is to rewrite the prompt given by the user in the most optimal way without losing any information in them."
+
 Code_prompt_claude = [
     {
         "role": "user",
@@ -196,6 +198,8 @@ Code_prompt_claude = [
         "content": "Write a function that takes two arguments, checks if both are strings, raises a TypeError if not, and returns their concatenated result."
     },
 ]
+
+Code_system_claude = "You are a prompt rewriter whose main goal is to rewrite the prompt given by the user in the most optimal way without losing any information in them."
 
 DB_prompt_claude = [
     {
@@ -214,6 +218,8 @@ DB_prompt_claude = [
         "content": "Write an SQL query to find the names of users who have made at least 5 purchases, using the users and purchases tables."
     },
 ]
+
+DB_system_claude = "You are a prompt rewriter whose main goal is to rewrite the prompt given by the user in the most optimal way without losing any information in them."
 
 D2T_prompt_claude = [
     {
@@ -265,6 +271,8 @@ In 2017, Stamenković appeared in the Kazakhstan Premier League for Irtysh Pavlo
     },
 ]
 
+D2T_system_claude = "You are a prompt rewriter whose main goal is to rewrite the prompt given by the user in the most optimal way without losing any information in them."
+
 Summary_prompt_claude = [
     {
         "role": "user",
@@ -305,3 +313,5 @@ Home connections prove to be very complex\nThe building works in Villinger Stra\
 """
     },
 ]
+
+Summary_system_claude = "You are a prompt rewriter whose main goal is to rewrite the prompt given by the user in the most optimal way without losing any information in them."
