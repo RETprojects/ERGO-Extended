@@ -252,7 +252,8 @@ class ClaudeModel(BaseModel):
         # thanks to the Amazon Bedrock docs: https://docs.aws.amazon.com/bedrock/latest/userguide/custom-model-import-advanced-features.html
 
         payload = {
-            "system": system,
+            # "system": system,
+            # "anthropic_version": "bedrock-2023-05-31",
             "messages": prompt,
             "max_tokens": self.max_tokens,
             "temperature": self.temperature,

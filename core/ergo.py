@@ -94,6 +94,7 @@ class Ergo:
         """
         if isinstance(self.model, ClaudeModel):
             system = self.system_prompts.get(dataset.dataset_name, "")
+            sharded_prompt = [msg for msg in sharded_prompt if msg["role"] != "system"]
             avg_entropy, avg_probability, perplexity, response = self.model.generate(sharded_prompt, system=system)
         else:
             avg_entropy, avg_probability, perplexity, response = self.model.generate(sharded_prompt)
