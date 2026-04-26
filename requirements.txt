@@ -5,6 +5,7 @@ torch
 transformers
 numpy
 sacrebleu
+python-dotenv
 
 # dev/test
 pytest

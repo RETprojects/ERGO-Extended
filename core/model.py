@@ -10,6 +10,9 @@ import sys
 import json
 import boto3
 import base64
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # logging.set_verbosity_info()
 
@@ -147,7 +150,7 @@ class OpenAIModel(BaseModel):
 
     def __init__(self, model_name, temperature, max_tokens, top_logprobs: int = 20):
         super().__init__(model_name)
-        self.client = OpenAI(api_key = os.environ["OPENAI_KEY"])
+        self.client = OpenAI(api_key = os.getenv["OPENAI_KEY"])
         self.temperature = temperature
         self.max_tokens = max_tokens
         self.top_logprobs = top_logprobs
