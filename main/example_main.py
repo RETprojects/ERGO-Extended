@@ -8,12 +8,12 @@ import torch
 # otherwise it will try to load the model locally with HuggingFace
 
 Example_Experiment = RunExperiment(
-    model_name="global.anthropic.claude-sonnet-4-6", 
+    model_name="gpt-5.4-2026-03-05", 
     device="cuda" if torch.cuda.is_available() else "cpu", # thanks to MBT: https://stackoverflow.com/a/53374933
     device_map=None, 
     max_new_tokens=1000, 
-    openai = False,
-    claude=True,
+    openai = True,
+    claude=False,
     clear_cache=True
 )
 
@@ -24,5 +24,5 @@ Example_Experiment.run_Actions(
     threshold_H=0.03, 
     threshold_p=-0.1, 
     threshold_PPL=50, 
-    output_path="outputs/actions_example_3signals_newthresholds_claude.json"
+    output_path="outputs/actions_example_3signals_newthresholds_gpt.json"
 )

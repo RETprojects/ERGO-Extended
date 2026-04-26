@@ -253,7 +253,7 @@ class ClaudeModel(BaseModel):
 
         payload = {
             # "system": system,
-            # "anthropic_version": "bedrock-2023-05-31",
+            "anthropic_version": "bedrock-2023-05-31",
             "messages": prompt,
             "max_tokens": self.max_tokens,
             "temperature": self.temperature,
