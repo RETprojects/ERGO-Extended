@@ -11,6 +11,7 @@ import json
 import boto3
 import base64
 from dotenv import load_dotenv
+import numpy as np
 
 load_dotenv()
 
@@ -194,7 +195,7 @@ class OpenAIModel(BaseModel):
         for token_info in token_logprobs:
             entropy = 0.0
             for logprob in token_info.top_logprobs:
-                p = math.exp(logprob.logprob)
+                p = np.exp(logprob.logprob)
                 entropy += -p * logprob.logprob
             entropies.append(entropy)
 
@@ -207,7 +208,7 @@ class OpenAIModel(BaseModel):
             probability = 1.0
             for logprob in token_info.top_logprobs:
                 probability *= logprob.logprob
-            probabilities.append(math.exp(probability))
+            probabilities.append(np.exp(probability))
 
         avg_probability = sum(probabilities) / len(probabilities) if probabilities else 0.0
         return avg_probability
