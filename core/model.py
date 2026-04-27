@@ -193,9 +193,9 @@ class OpenAIModel(BaseModel):
         entropies = []
         for token_info in token_logprobs:
             entropy = 0.0
-            for logprob in token_info.top_logprobs.values():
-                p = math.exp(logprob)
-                entropy += -p * logprob
+            for logprob in token_info.top_logprobs:
+                p = math.exp(logprob.logprob)
+                entropy += -p * logprob.logprob
             entropies.append(entropy)
 
         avg_entropy = sum(entropies) / len(entropies) if entropies else 0.0
@@ -205,8 +205,8 @@ class OpenAIModel(BaseModel):
         probabilities = []
         for token_info in token_logprobs:
             probability = 1.0
-            for logprob in token_info.top_logprobs.values():
-                probability *= logprob
+            for logprob in token_info.top_logprobs:
+                probability *= logprob.logprob
             probabilities.append(math.exp(probability))
 
         avg_probability = sum(probabilities) / len(probabilities) if probabilities else 0.0
@@ -216,9 +216,9 @@ class OpenAIModel(BaseModel):
         inv_probabilities = []
         for token_info in token_logprobs:
             probability = 1.0
-            for logprob in token_info.top_logprobs.values():
-                probability *= logprob
-            inv_probabilities.append(1.0 / math.exp(probability))
+            for logprob in token_info.top_logprobs:
+                probability *= logprob.logprob
+            inv_probabilities.append(1.0 / np.exp(probability))
 
         perplexity = sum(inv_probabilities) / len(inv_probabilities) if inv_probabilities else 0.0
         return perplexity
