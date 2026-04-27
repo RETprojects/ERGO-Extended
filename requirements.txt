@@ -1,8 +1,11 @@
 openai
+anthropic
+boto3
 torch 
 transformers
 numpy
 sacrebleu
+python-dotenv
 
 # dev/test
 pytest

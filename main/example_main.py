@@ -8,11 +8,11 @@ import torch
 # otherwise it will try to load the model locally with HuggingFace
 
 Example_Experiment = RunExperiment(
-    model_name="meta-llama/Meta-Llama-3.1-8B-Instruct", 
+    model_name="gpt-4.1-mini-2025-04-14", 
     device="cuda" if torch.cuda.is_available() else "cpu", # thanks to MBT: https://stackoverflow.com/a/53374933
     device_map=None, 
     max_new_tokens=1000, 
-    openai = False,
+    openai = True,
     clear_cache=True
 )
 
@@ -21,5 +21,5 @@ Example_Experiment.run_Code(
     num_Qs=100, 
     num_runs=3, 
     threshold=0.03, 
-    output_path="outputs/code_example_ergo_selectthreshold_llama.json"
+    output_path="outputs/code_example_ergo_selectthreshold_gpt41mini.json"
 )

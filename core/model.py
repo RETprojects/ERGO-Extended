@@ -6,6 +6,13 @@ from typing import List, Dict, Any, Tuple
 from transformers import AutoTokenizer, AutoModelForCausalLM, logging
 import torch
 import sys
+import json
+import boto3
+import base64
+from dotenv import load_dotenv
+import numpy as np
+
+load_dotenv()
 
 # logging.set_verbosity_info()
 
@@ -112,7 +119,7 @@ class OpenAIModel(BaseModel):
 
     def __init__(self, model_name, temperature, max_tokens, top_logprobs: int = 20):
         super().__init__(model_name)
-        self.client = OpenAI(api_key = os.environ["OPENAI_KEY"])
+        self.client = OpenAI(api_key = os.getenv("OPENAI_KEY"))
         self.temperature = temperature
         self.max_tokens = max_tokens
         self.top_logprobs = top_logprobs
@@ -147,9 +154,9 @@ class OpenAIModel(BaseModel):
         entropies = []
         for token_info in token_logprobs:
             entropy = 0.0
-            for logprob in token_info.top_logprobs.values():
-                p = math.exp(logprob)
-                entropy += -p * logprob
+            for logprob in token_info.top_logprobs:
+                p = np.exp(logprob.logprob)
+                entropy += -p * logprob.logprob
             entropies.append(entropy)
 
         avg_entropy = sum(entropies) / len(entropies) if entropies else 0.0
