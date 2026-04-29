@@ -1,6 +1,6 @@
 import pandas as pd
 
-df = pd.read_json('outputs/math_example_3signals_newthresholds_llama_run2.json')
+df = pd.read_json('outputs/math_example_ergo_selectthreshold_gpt41mini_run2.json')
 
 # print(df.shape[0])
 # print(df.columns)

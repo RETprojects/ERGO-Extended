@@ -431,7 +431,8 @@ class SummaryEvalUtils(EvalUtils):
 
 
     def evaluator_function(self, extracted_answer, sample):
-        evaluator_model_card = "t-gpt-4o" if os.environ.get("USE_TRAPI", "0") == "1" else "gpt-4o"
+        evaluator_model_card = "gpt-4.1-mini-2025-04-14"
+        # evaluator_model_card = "t-gpt-4o" if os.environ.get("USE_TRAPI", "0") == "1" else "gpt-4o"
         # evaluator_model_card = "open-ai/gpt-oss-20b"
         evals = self.evaluate_insights(sample["insights"], extracted_answer, evaluator_model_card, os.path.abspath("evaluation/eval_summhay.txt"))
         # eval should likely be cached somewhere, so results can be explained if needed
