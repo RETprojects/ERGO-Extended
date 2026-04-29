@@ -17,12 +17,12 @@ Example_Experiment = RunExperiment(
     clear_cache=True
 )
 
-Example_Experiment.run_Actions(
+Example_Experiment.run_Summary(
     dataset_path="sharded_dataset.json", # Path to sharded dataset from Laban et al.
     num_Qs=100, 
     num_runs=3, 
     threshold_H=0.03, 
     threshold_p=-0.1, 
     threshold_PPL=50, 
-    output_path="outputs/actions_example_3signals_newthresholds_llama.json"
+    output_path="outputs/summary_example_3signals_newthresholds_llama.json"
 )
