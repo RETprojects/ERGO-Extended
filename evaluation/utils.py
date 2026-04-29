@@ -627,6 +627,16 @@ class SummaryEvalUtils(EvalUtils):
         while True:
             try:
                 response = self.client.chat.completions.create(model=model, messages=messages, timeout=timeout, max_completion_tokens=max_tokens, temperature=temperature, **kwargs)
+                # response = self.client.chat.completions.create(
+                #     model=model,
+                #     messages=messages,
+                #     timeout=timeout,
+                #     max_completion_tokens=max_tokens,
+                #     temperature=temperature,
+                #     logprobs=True,
+                #     top_logprobs=self.top_logprobs,
+                #     **kwargs
+                # )
                 # pipe = pipeline(
                 #     "text-generation",
                 #     model=model,
@@ -637,7 +647,7 @@ class SummaryEvalUtils(EvalUtils):
                 #     messages,
                 #     max_new_tokens=256,
                 # )[0]["generated_text"][-1]
-                response = response.choices[0].message.content
+                # response = response.choices[0].message.content
                 # # thanks to Dominik Kundel: https://developers.openai.com/cookbook/articles/gpt-oss/run-transformers
                 # tokenizer = AutoTokenizer.from_pretrained(model)
                 # eval_model = AutoModelForCausalLM.from_pretrained(
