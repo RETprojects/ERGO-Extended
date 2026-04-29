@@ -15,6 +15,11 @@ import time
 from transformers import pipeline, AutoModelForCausalLM, AutoTokenizer
 import torch
 
+from dotenv import load_dotenv
+import numpy as np
+
+load_dotenv()
+
 
 class EvalUtils:
     """
