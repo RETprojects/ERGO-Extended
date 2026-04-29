@@ -616,7 +616,7 @@ class SummaryEvalUtils(EvalUtils):
         return response
     
     def generate(self, messages, model="gpt-4o-mini", timeout=30, max_retries=3, temperature=1.0, is_json=False, return_metadata=False, max_tokens=None, variables={}, **kwargs):
-        if not (kwargs in locals() or kwargs in globals()):
+        if not ('kwargs' in locals() or 'kwargs' in globals()):
             kwargs = {}
         if is_json:
             kwargs["response_format"] = { "type": "json_object" }
