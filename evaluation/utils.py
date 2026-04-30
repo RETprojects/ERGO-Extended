@@ -417,7 +417,7 @@ class SummaryEvalUtils(EvalUtils):
         # with open("summary_system_prompt.txt", "r") as f:
         #     self.system_prompt = f.read()
         # self.answer_extraction_strategy = "full_response"
-        self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        self.client = OpenAI(api_key=os.getenv("OPENAI_KEY"))
 
     # def get_answer_description(self) -> str:
     #     return "A complete summary potentially containing multiple lines, and citation."
@@ -695,14 +695,15 @@ class SummaryEvalUtils(EvalUtils):
         response = response.to_dict()
         usage = response['usage']
         response_text = response["choices"][0]["message"]["content"]
-        total_usd = self.cost_calculator(model, usage)
+        # total_usd = self.cost_calculator(model, usage)
         prompt_tokens_cached = 0
         if 'prompt_tokens_details' in usage:
             prompt_tokens_cached = usage['prompt_tokens_details']['cached_tokens']
 
         if not return_metadata:
             return response_text
-        return {"message": response_text, "total_tokens": usage['total_tokens'], "prompt_tokens": usage['prompt_tokens'], "prompt_tokens_cached": prompt_tokens_cached, "completion_tokens": usage['completion_tokens'], "total_usd": total_usd}
+        # return {"message": response_text, "total_tokens": usage['total_tokens'], "prompt_tokens": usage['prompt_tokens'], "prompt_tokens_cached": prompt_tokens_cached, "completion_tokens": usage['completion_tokens'], "total_usd": total_usd}
+        return {"message": response_text, "total_tokens": usage['total_tokens'], "prompt_tokens": usage['prompt_tokens'], "prompt_tokens_cached": prompt_tokens_cached, "completion_tokens": usage['completion_tokens']}
 
     def format_messages(self, messages, variables={}):
         last_user_msg = [msg for msg in messages if msg["role"] == "user"][-1]
