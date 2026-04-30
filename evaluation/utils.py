@@ -15,6 +15,8 @@ import time
 from transformers import pipeline, AutoModelForCausalLM, AutoTokenizer
 import torch
 
+from openai import OpenAI
+
 from dotenv import load_dotenv
 import numpy as np
 
@@ -415,6 +417,7 @@ class SummaryEvalUtils(EvalUtils):
         # with open("summary_system_prompt.txt", "r") as f:
         #     self.system_prompt = f.read()
         # self.answer_extraction_strategy = "full_response"
+        self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
     # def get_answer_description(self) -> str:
     #     return "A complete summary potentially containing multiple lines, and citation."
@@ -632,6 +635,7 @@ class SummaryEvalUtils(EvalUtils):
 
         while True:
             try:
+                # TODO: remember, SummaryEvalUtils object does NOT have a self.client! I need to refer to a model instance instead
                 response = self.client.chat.completions.create(model=model, messages=messages, timeout=timeout, max_completion_tokens=max_tokens, temperature=temperature, **kwargs)
                 # response = self.client.chat.completions.create(
                 #     model=model,
