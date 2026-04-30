@@ -177,9 +177,8 @@ class SummaryEvaluator(Evaluator):
         reference_answer = dataset.data[question_id]
 
         score = SummEval.evaluator_function(extracted_answer, reference_answer)
-        print("score:", score)
         
-        return {"score": np.round(float(score), 4), "error": None}
+        return {"score": np.round(score['score'], 4), "error": None}
     
     def identifier(self):
         return "Summary"
