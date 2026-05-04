@@ -1,7 +1,7 @@
 <div align="center">
 
 # ERGO-Extended: Inference-Time Multi-Turn Context Consolidation
-<br>
+<!-- <br> -->
 
 <!-- ![ERGO Banner](READMEimg/Representative_Diagram.png) -->
 
