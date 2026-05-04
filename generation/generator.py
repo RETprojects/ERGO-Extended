@@ -2,7 +2,7 @@ from core.model import BaseModel
 from core.dataset import Dataset  
 from core.ergo import Ergo
 from core.utils import Logger
-from evaluation.evaluator import GSM8KEvaluator, ActionsEvaluator, CodeEvaluator, DatabaseEvaluator, DataToTextEvaluator, Evaluator
+from evaluation.evaluator import GSM8KEvaluator, ActionsEvaluator, CodeEvaluator, DatabaseEvaluator, DataToTextEvaluator, SummaryEvaluator, Evaluator
 import random, gc, torch
 
 class RunERGO():
@@ -36,6 +36,10 @@ class RunERGO():
                 message_history = []
                 entropies = []
                 prev_entropy = float("inf")
+                probabilities = []
+                prev_probability = -float("inf")
+                perplexities = []
+                prev_perplexity = float("inf")
                 resets = []
 
                 for shard in item["shards"]:
@@ -47,10 +51,14 @@ class RunERGO():
                         user_content += self.dataset.final_shard_instruct
                     messages.append({"role": "user", "content": user_content})
 
-                    entropy, new_message, reset, messages, prev_prompts = self.ergo.run(messages, self.dataset, prev_entropy)
+                    entropy, probability, perplexity, new_message, reset, messages, prev_prompts = self.ergo.run(messages, self.dataset, prev_entropy, prev_probability, prev_perplexity)
                     messages.append({"role": "assistant", "content": new_message})
                     prev_entropy = entropy
                     entropies.append(entropy)
+                    prev_probability = probability
+                    probabilities.append(probability)
+                    prev_perplexity = perplexity
+                    perplexities.append(perplexity)
 
                     if reset:
                         resets.append(1)
@@ -69,7 +77,7 @@ class RunERGO():
                         if self.evaluator.identifier() == "DataToText":
                             result = self.evaluator.evaluate(dataset=self.dataset, extracted_answer=new_message, question_id=question)
 
-                        self.logger.log_entry(question, messages, new_message, entropies, resets, result, message_history)
+                        self.logger.log_entry(question, messages, new_message, entropies, probabilities, perplexities, resets, result, message_history)
                         self.logger.save(run)
                     
                         if clear_cache:

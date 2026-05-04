@@ -1,6 +1,6 @@
 import json
-from core.dataset import GSM8K, Code, Database, DataToText, Actions, Dataset
-from .utils import CodeEvalUtils, DatabaseEvalUtils, DataToTextEvalUtils, ActionsEvalUtils
+from core.dataset import GSM8K, Code, Database, DataToText, Actions, Summary, Dataset
+from .utils import CodeEvalUtils, DatabaseEvalUtils, DataToTextEvalUtils, ActionsEvalUtils, SummaryEvalUtils
 import ast
 import numpy as np
 import re
@@ -167,3 +167,18 @@ class DataToTextEvaluator(Evaluator):
     
     def identifier(self):
         return "DataToText"
+
+class SummaryEvaluator(Evaluator):
+    def __init__(self, output_file=None, dataset_path=None):
+        super().__init__(output_file, dataset_path)
+
+    def evaluate(self, dataset: Dataset, extracted_answer, question_id):
+        SummEval = SummaryEvalUtils()
+        reference_answer = dataset.data[question_id]
+
+        score = SummEval.evaluator_function(extracted_answer, reference_answer)
+        
+        return {"score": np.round(score['score'], 4), "error": None}
+    
+    def identifier(self):
+        return "Summary"

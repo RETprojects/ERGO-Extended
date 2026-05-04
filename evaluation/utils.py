@@ -5,6 +5,22 @@ import sys
 import tempfile
 import subprocess
 import sqlite3
+import json
+import os
+import json, re
+import numpy as np
+import time
+# from core.model import generate_json
+# import core.model as model
+from transformers import pipeline, AutoModelForCausalLM, AutoTokenizer
+import torch
+
+from openai import OpenAI
+
+from dotenv import load_dotenv
+import numpy as np
+
+load_dotenv()
 
 
 class EvalUtils:
@@ -97,7 +113,7 @@ class ActionsEvalUtils(EvalUtils):
             sample["reference_answer"],
             sample["language"],
             sample["test_category"],
-            "gpt-4o"
+            "gpt-oss-120b"
         )
         score = 1 if result["valid"] else 0
         return {"is_correct": result["valid"], "score": score, "error": result["error"]}
@@ -389,3 +405,362 @@ else:
             return True
         else:
             return False
+
+class SummaryEvalUtils(EvalUtils):
+    def __init__(self):
+        super().__init__()
+        # # self.version = version
+        # with open("summary_full_prompt_conv.txt", "r") as f:
+        #     self.fully_specified_prompt_conv = f.read()
+        # with open("summary_full_prompt_news.txt", "r") as f:
+        #     self.fully_specified_prompt_news = f.read()
+        # with open("summary_system_prompt.txt", "r") as f:
+        #     self.system_prompt = f.read()
+        # self.answer_extraction_strategy = "full_response"
+        self.client = OpenAI(api_key=os.getenv("OPENAI_KEY"))
+
+    # def get_answer_description(self) -> str:
+    #     return "A complete summary potentially containing multiple lines, and citation."
+
+    # def generate_system_prompt(self, sample):
+    #     return self.system_prompt
+
+    # def get_task_name(self) -> str:
+    #     return "summary"
+
+    # def get_dataset_file(self) -> str:
+    #     return "data/sharded_instructions_600.json"
+
+    # def get_samples(self):
+    #     with open(self.get_dataset_file(), "r") as f:
+    #         samples = json.load(f)
+    #     samples = [d for d in samples if d["task"] == "summary"]
+    #     return samples
+
+
+    def evaluator_function(self, extracted_answer, sample):
+        evaluator_model_card = "gpt-4.1-mini-2025-04-14"
+        # evaluator_model_card = "t-gpt-4o" if os.environ.get("USE_TRAPI", "0") == "1" else "gpt-4o"
+        # evaluator_model_card = "open-ai/gpt-oss-20b"
+        evals = self.evaluate_insights(sample["insights"], extracted_answer, evaluator_model_card, os.path.abspath("evaluation/eval_summhay.txt"))
+        # eval should likely be cached somewhere, so results can be explained if needed
+        results = self.compute_single_sample_results(extracted_answer, evals, sample["insightid2ref_citations"])
+        # results["score"] = results["coverage_score"]
+        results["score"] = results["joint_score"] # we save this as the main score we anchor on
+        return results
+
+    # def populate_fully_specific_prompt(self, sample):
+    #     prompt = self.fully_specified_prompt_conv if sample["domain"] == "conv" else self.fully_specified_prompt_news
+
+    #     documents_txt = ""
+    #     for document in sample["documents"]:
+    #         documents_txt += f"Document {document['document_index']}:\n{document['document_text']}\n\n"
+
+    #     prompt = prompt.replace("[[TOPIC]]", sample["topic"]).replace("[[DOCUMENTS]]", documents_txt).replace("[[QUERY]]", sample["query"]).replace("[[N_DOCS]]", str(len(sample["documents"]))).replace("[[N_INSIGHTS]]", str(len(sample["insights"])))
+    #     return prompt
+
+    # def populate_concat_prompt(self, sample):
+    #     prompt = self.fully_specified_prompt_conv if sample["domain"] == "conv" else self.fully_specified_prompt_news
+    #     documents_txt = "The documents were received in multiple chunks, you can disregard the chunking information, and consider all documents equally."
+    #     doc_idx2doc = {doc["document_index"]: doc["document_text"] for doc in sample["documents"]}
+
+    #     for i, shard in enumerate(sample["shards"]):
+    #         documents_txt += f"Document Chunk {i+1}:\n"
+    #         for doc_idx in shard["doc_idxs"]:
+    #             documents_txt += f"Document {doc_idx}:\n{doc_idx2doc[doc_idx]}\n\n"
+
+    #     prompt = prompt.replace("[[TOPIC]]", sample["topic"]).replace("[[DOCUMENTS]]", documents_txt).replace("[[QUERY]]", sample["query"]).replace("[[N_DOCS]]", str(len(sample["documents"]))).replace("[[N_INSIGHTS]]", str(len(sample["insights"])))
+    #     return prompt
+    
+    # def populate_sharded_prompt(self, sample, turn_index):
+    #     doc_idx2doc = {doc["document_index"]: doc["document_text"] for doc in sample["documents"]}
+    #     if turn_index == 0:
+    #         shard = sample["shards"][0]
+    #         prompt = self.fully_specified_prompt_conv if sample["domain"] == "conv" else self.fully_specified_prompt_news
+    #         documents_txt = ""
+    #         for doc_idx in shard["doc_idxs"]:
+    #             documents_txt += f"Document {doc_idx}:\n{doc_idx2doc[doc_idx]}\n\n"
+    #         prompt = prompt.replace("[[TOPIC]]", sample["topic"]).replace("[[DOCUMENTS]]", documents_txt).replace("[[QUERY]]", sample["query"]).replace("[[N_DOCS]]", str(len(sample["documents"]))).replace("[[N_INSIGHTS]]", str(len(sample["insights"])))
+    #         return prompt, shard["shard_id"], 0.0
+    #     elif turn_index <= len(sample["shards"]):
+    #         shard = sample["shards"][(turn_index-1)]
+    #         documents_txt = ""
+    #         for doc_idx in shard["doc_idxs"]:
+    #             documents_txt += f"Document {doc_idx}:\n{doc_idx2doc[doc_idx]}\n\n"
+    #         prompt = f"I have found a few additional documents, please rewrite the summary considering all documents so far (from before, and the new ones).\n\n{documents_txt}"
+    #         return prompt, shard["shard_id"], 0.0
+    #     else:
+    #         return None, -1, 0.0
+
+    
+    # def process_original_sample(self, sample):
+    #     return {
+    #         "task_id": sample["task_id"],
+    #         "topic": sample["topic"],
+    #         "query": sample["query"],
+    #         "documents": sample["documents"],
+    #         "insights": sample["insights"]
+    #     }
+
+    # def __init__(self):
+    #     super().__init__()
+
+    def summary2bullets(self, summary, max_summary_length=300):
+        bullets = summary.split("\n")
+        
+        # Count words in each bullet (using space counting)
+        bullet_word_counts = [len(bullet.split()) for bullet in bullets]
+        total_words = sum(bullet_word_counts)
+        
+        # If we're under the limit, return as is
+        if total_words <= max_summary_length:
+            return {"bullets": bullets, "trim_ratio": 0.0}
+            
+        # Calculate percentage to trim
+        excess_percentage = (total_words - max_summary_length) / total_words
+        
+        # Trim each bullet proportionally
+        trimmed_bullets = []
+        for bullet, word_count in zip(bullets, bullet_word_counts):
+            if word_count == 0:
+                trimmed_bullets.append(bullet)
+                continue
+                
+            # Calculate how many words to keep
+            words_to_keep = int(word_count * (1 - excess_percentage))
+            if words_to_keep < 1:
+                words_to_keep = 1
+                
+            # Split into words and rejoin
+            words = bullet.split()
+            trimmed_bullet = " ".join(words[:words_to_keep])
+            trimmed_bullets.append(trimmed_bullet)
+        
+        return {"bullets": trimmed_bullets, "trim_ratio": excess_percentage}
+
+    def evaluate_insights(self, insights, summary, evaluator_model_card, eval_prompt_fn="eval_summhay.txt"):
+        # openaimodel = model.OpenAIModel() # make an instance so that we can use generate_json
+
+        with open(eval_prompt_fn, "r") as f:   
+            prompt_eval = f.read()
+
+        bullets_obj = self.summary2bullets(summary)
+        bullets = bullets_obj["bullets"]
+        bullets_str = json.dumps({"bullets": [{"bullet_id": i+1, "text": bullet} for i, bullet in enumerate(bullets)]}, indent=1)
+        insight_scores = []
+        for insight in insights:
+            response_all = self.generate_json(messages=[{"role": "user", "content": prompt_eval}], model=evaluator_model_card, return_metadata=True, variables={"BULLETS": bullets_str, "INSIGHT": insight["insight"]})
+            response_json  = response_all["message"]
+            response_json["insight_id"] = insight["insight_id"] 
+            insight_scores.append(response_json)
+        return insight_scores
+
+    def build_ref_insight2docids(self, topic):
+        insight_id2references = {}
+        for i, doc in enumerate(topic["documents"]):
+            doc_id = i + 1
+            for insight_id in doc["insights_included"]:
+                if insight_id not in insight_id2references:
+                    insight_id2references[insight_id] = set([])
+                insight_id2references[insight_id].add(doc_id)
+
+        insight_id2references = {k: list(v) for k, v in insight_id2references.items()} # make it into a list
+        return insight_id2references
+
+    def extract_citations(self, bullet):
+        # matches digits or commas
+        matches = re.findall(r"\[([\d, ]+)\]", bullet)
+        ref_ids = []
+        for match in matches:
+            ref_ids += [int(m.strip()) for m in match.split(",") if len(m.strip()) > 0]
+        return ref_ids
+
+    def compute_single_sample_scores(self, summary, evals, insightid2ref_citations, partial_score=0.5, cite_offset=0): # the cite offset should be one for the annotators (but not for the model eval)
+        bullets_obj = self.summary2bullets(summary)
+        bullets = bullets_obj["bullets"]
+        trim_ratio = bullets_obj["trim_ratio"]
+
+        coverage_scores, citation_scores, joint_scores = [], [], []
+        citation_precisions, citation_recalls = [], []
+        for e in evals:
+            cov_score, cit_score, cit_prec, cit_rec = 0.0, 0.0, 0.0, 0.0
+            if e["coverage"] in ["PARTIAL_COVERAGE", "FULL_COVERAGE"]:
+                cov_score = 1.0 if e["coverage"] == "FULL_COVERAGE" else partial_score
+                insight_id = e["insight_id"]
+                try:
+                    bullet_match_idx = int(e["bullet_id"])
+                except:
+                    bullet_match_idx = -1
+                bullet_match = bullets[bullet_match_idx - 1]
+
+                gen_citations = set([cite+cite_offset for cite in self.extract_citations(bullet_match)])
+                ref_citations = set(insightid2ref_citations[insight_id])
+
+                P = 0 if len(gen_citations) == 0 else len(gen_citations & ref_citations) / len(gen_citations)
+                R = 0 if len(ref_citations) == 0 else len(gen_citations & ref_citations) / len(ref_citations)
+                F1 = 0 if P + R == 0 else 2 * P * R / (P + R)
+                cit_prec, cit_rec, cit_score = P, R, F1
+                citation_scores.append(cit_score)
+                citation_precisions.append(cit_prec)
+                citation_recalls.append(cit_rec)
+
+            coverage_scores.append(cov_score)
+            joint_scores.append(cov_score * cit_score)
+        return {"coverage_score": coverage_scores, "citation_score": citation_scores, "joint_score": joint_scores, "citation_precision": citation_precisions, "citation_recall": citation_recalls, "trim_ratio": trim_ratio}
+
+    def compute_single_sample_results(self, summary, evals, insightid2ref_citations, partial_score=0.5, cite_offset=0):
+        scores = self.compute_single_sample_scores(summary, evals, insightid2ref_citations, partial_score, cite_offset=cite_offset)
+        return {k: np.mean(v).item() for k, v in scores.items()}
+    
+    # from lost-in-conversation/model-openai.py
+    def generate_json(self, messages, model="gpt-4o-mini", **kwargs):
+        response = self.generate(messages=messages, model=model, is_json=True, **kwargs)
+        response["message"] = json.loads(response["message"])
+        return response
+    
+    def generate(self, messages, model="gpt-4o-mini", timeout=30, max_retries=3, temperature=1.0, is_json=False, return_metadata=False, max_tokens=None, variables={}, **kwargs):
+        if not ('kwargs' in locals() or 'kwargs' in globals()):
+            kwargs = {}
+        if is_json:
+            kwargs["response_format"] = { "type": "json_object" }
+        N = 0
+
+        messages = self.format_messages(messages, variables)
+
+        # o1- models do not support system message. If the first message is a system message, and the second message is a user message, then prepend the user message with the system message.
+        if model.startswith("o1") and len(messages) > 1 and messages[0]["role"] == "system" and messages[1]["role"] == "user":
+            system_message = messages[0]["content"]
+            messages[1]["content"] = f"System Message: {system_message}\n{messages[1]['content']}"
+            messages = messages[1:]
+
+        while True:
+            try:
+                # TODO: remember, SummaryEvalUtils object does NOT have a self.client! I need to refer to a model instance instead
+                response = self.client.chat.completions.create(model=model, messages=messages, timeout=timeout, max_completion_tokens=max_tokens, temperature=temperature, **kwargs)
+                # response = self.client.chat.completions.create(
+                #     model=model,
+                #     messages=messages,
+                #     timeout=timeout,
+                #     max_completion_tokens=max_tokens,
+                #     temperature=temperature,
+                #     logprobs=True,
+                #     top_logprobs=self.top_logprobs,
+                #     **kwargs
+                # )
+                # pipe = pipeline(
+                #     "text-generation",
+                #     model=model,
+                #     torch_dtype="auto",
+                #     device_map="auto",
+                # )
+                # response = pipe(
+                #     messages,
+                #     max_new_tokens=256,
+                # )[0]["generated_text"][-1]
+                # response = response.choices[0].message.content
+                # # thanks to Dominik Kundel: https://developers.openai.com/cookbook/articles/gpt-oss/run-transformers
+                # tokenizer = AutoTokenizer.from_pretrained(model)
+                # eval_model = AutoModelForCausalLM.from_pretrained(
+                #     model,
+                #     torch_dtype="auto",
+                #     device_map="auto"
+                # )
+
+                # messages = [
+                #     {"role": "user", "content": "Explain what MXFP4 quantization is."},
+                # ]
+
+                # inputs = tokenizer.apply_chat_template(
+                #     messages,
+                #     add_generation_prompt=True,
+                #     return_tensors="pt",
+                #     return_dict=True,
+                # ).to(eval_model.device)
+
+                # outputs = eval_model.generate(
+                #     **inputs,
+                #     max_new_tokens=200,
+                #     temperature=0.7
+                # )
+
+                # response = tokenizer.decode(outputs[0])
+                break
+            except:
+                N += 1
+                if N >= max_retries:
+                    raise Exception("Failed to get response from OpenAI")
+                else:
+                    time.sleep(4)
+
+        response = response.to_dict()
+        usage = response['usage']
+        response_text = response["choices"][0]["message"]["content"]
+        # total_usd = self.cost_calculator(model, usage)
+        prompt_tokens_cached = 0
+        if 'prompt_tokens_details' in usage:
+            prompt_tokens_cached = usage['prompt_tokens_details']['cached_tokens']
+
+        if not return_metadata:
+            return response_text
+        # return {"message": response_text, "total_tokens": usage['total_tokens'], "prompt_tokens": usage['prompt_tokens'], "prompt_tokens_cached": prompt_tokens_cached, "completion_tokens": usage['completion_tokens'], "total_usd": total_usd}
+        return {"message": response_text, "total_tokens": usage['total_tokens'], "prompt_tokens": usage['prompt_tokens'], "prompt_tokens_cached": prompt_tokens_cached, "completion_tokens": usage['completion_tokens']}
+
+    def format_messages(self, messages, variables={}):
+        last_user_msg = [msg for msg in messages if msg["role"] == "user"][-1]
+
+        for k, v in variables.items():
+            key_string = f"[[{k}]]"
+            if key_string not in last_user_msg["content"]:
+                print(f"[prompt] Key {k} not found in prompt; effectively ignored")
+            assert type(v) == str, f"[prompt] Variable {k} is not a string"
+            last_user_msg["content"] = last_user_msg["content"].replace(key_string, v)
+
+        # find all the keys that are still in the prompt using regex [[STR]] where STR is alnum witout space
+        keys_still_in_prompt = re.findall(r"\[\[([^\]]+)\]\]", last_user_msg["content"])
+        if len(keys_still_in_prompt) > 0:
+            print(f"[prompt] The following keys were not replaced: {keys_still_in_prompt}")
+
+        return messages
+    
+    def cost_calculator(self, model, usage, is_batch_model=False):
+        is_finetuned, base_model = False, model
+        if model.startswith("ft:gpt"):
+            is_finetuned = True
+            base_model = model.split(":")[1]
+
+        prompt_tokens = usage['prompt_tokens']
+        if 'prompt_tokens_details' in usage:
+            prompt_tokens_cached = usage['prompt_tokens_details']['cached_tokens']
+        else:
+            prompt_tokens_cached = 0
+        prompt_tokens_non_cached = prompt_tokens - prompt_tokens_cached
+
+        completion_tokens = usage['completion_tokens']
+        if base_model.startswith("gpt-4o-mini"):
+            if is_finetuned:
+                inp_token_cost, out_token_cost = 0.0003, 0.00015
+            else:
+                inp_token_cost, out_token_cost = 0.00015, 0.0006
+        elif base_model.startswith("gpt-4o"):
+            if is_finetuned:
+                inp_token_cost, out_token_cost = 0.00375, 0.015
+            else:
+                inp_token_cost, out_token_cost = 0.0025, 0.01
+        elif base_model.startswith("gpt-3.5-turbo"):
+            inp_token_cost, out_token_cost = 0.0005, 0.0015
+        elif base_model.startswith("o1-mini"):
+            inp_token_cost, out_token_cost = 0.003, 0.012
+        elif base_model.startswith("gpt-4.5-preview"):
+            inp_token_cost, out_token_cost = 0.075, 0.150
+        elif base_model.startswith("o1-preview") or base_model == "o1":
+            inp_token_cost, out_token_cost = 0.015, 0.06
+        else:
+            raise Exception(f"Model {model} pricing unknown, please add")
+
+        cache_discount = 0.5 # cached tokens are half the price
+        batch_discount = 0.5 # batch API is half the price
+        total_usd = ((prompt_tokens_non_cached + prompt_tokens_cached * cache_discount) / 1000) * inp_token_cost + (completion_tokens / 1000) * out_token_cost
+        if is_batch_model:
+            total_usd *= batch_discount
+
+        return total_usd
