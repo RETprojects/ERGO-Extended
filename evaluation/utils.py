@@ -10,8 +10,6 @@ import os
 import json, re
 import numpy as np
 import time
-# from core.model import generate_json
-# import core.model as model
 from transformers import pipeline, AutoModelForCausalLM, AutoTokenizer
 import torch
 
@@ -409,101 +407,17 @@ else:
 class SummaryEvalUtils(EvalUtils):
     def __init__(self):
         super().__init__()
-        # # self.version = version
-        # with open("summary_full_prompt_conv.txt", "r") as f:
-        #     self.fully_specified_prompt_conv = f.read()
-        # with open("summary_full_prompt_news.txt", "r") as f:
-        #     self.fully_specified_prompt_news = f.read()
-        # with open("summary_system_prompt.txt", "r") as f:
-        #     self.system_prompt = f.read()
-        # self.answer_extraction_strategy = "full_response"
         self.client = OpenAI(api_key=os.getenv("OPENAI_KEY"))
-
-    # def get_answer_description(self) -> str:
-    #     return "A complete summary potentially containing multiple lines, and citation."
-
-    # def generate_system_prompt(self, sample):
-    #     return self.system_prompt
-
-    # def get_task_name(self) -> str:
-    #     return "summary"
-
-    # def get_dataset_file(self) -> str:
-    #     return "data/sharded_instructions_600.json"
-
-    # def get_samples(self):
-    #     with open(self.get_dataset_file(), "r") as f:
-    #         samples = json.load(f)
-    #     samples = [d for d in samples if d["task"] == "summary"]
-    #     return samples
 
 
     def evaluator_function(self, extracted_answer, sample):
         evaluator_model_card = "gpt-4.1-mini-2025-04-14"
-        # evaluator_model_card = "t-gpt-4o" if os.environ.get("USE_TRAPI", "0") == "1" else "gpt-4o"
-        # evaluator_model_card = "open-ai/gpt-oss-20b"
         evals = self.evaluate_insights(sample["insights"], extracted_answer, evaluator_model_card, os.path.abspath("evaluation/eval_summhay.txt"))
         # eval should likely be cached somewhere, so results can be explained if needed
         results = self.compute_single_sample_results(extracted_answer, evals, sample["insightid2ref_citations"])
         # results["score"] = results["coverage_score"]
         results["score"] = results["joint_score"] # we save this as the main score we anchor on
         return results
-
-    # def populate_fully_specific_prompt(self, sample):
-    #     prompt = self.fully_specified_prompt_conv if sample["domain"] == "conv" else self.fully_specified_prompt_news
-
-    #     documents_txt = ""
-    #     for document in sample["documents"]:
-    #         documents_txt += f"Document {document['document_index']}:\n{document['document_text']}\n\n"
-
-    #     prompt = prompt.replace("[[TOPIC]]", sample["topic"]).replace("[[DOCUMENTS]]", documents_txt).replace("[[QUERY]]", sample["query"]).replace("[[N_DOCS]]", str(len(sample["documents"]))).replace("[[N_INSIGHTS]]", str(len(sample["insights"])))
-    #     return prompt
-
-    # def populate_concat_prompt(self, sample):
-    #     prompt = self.fully_specified_prompt_conv if sample["domain"] == "conv" else self.fully_specified_prompt_news
-    #     documents_txt = "The documents were received in multiple chunks, you can disregard the chunking information, and consider all documents equally."
-    #     doc_idx2doc = {doc["document_index"]: doc["document_text"] for doc in sample["documents"]}
-
-    #     for i, shard in enumerate(sample["shards"]):
-    #         documents_txt += f"Document Chunk {i+1}:\n"
-    #         for doc_idx in shard["doc_idxs"]:
-    #             documents_txt += f"Document {doc_idx}:\n{doc_idx2doc[doc_idx]}\n\n"
-
-    #     prompt = prompt.replace("[[TOPIC]]", sample["topic"]).replace("[[DOCUMENTS]]", documents_txt).replace("[[QUERY]]", sample["query"]).replace("[[N_DOCS]]", str(len(sample["documents"]))).replace("[[N_INSIGHTS]]", str(len(sample["insights"])))
-    #     return prompt
-    
-    # def populate_sharded_prompt(self, sample, turn_index):
-    #     doc_idx2doc = {doc["document_index"]: doc["document_text"] for doc in sample["documents"]}
-    #     if turn_index == 0:
-    #         shard = sample["shards"][0]
-    #         prompt = self.fully_specified_prompt_conv if sample["domain"] == "conv" else self.fully_specified_prompt_news
-    #         documents_txt = ""
-    #         for doc_idx in shard["doc_idxs"]:
-    #             documents_txt += f"Document {doc_idx}:\n{doc_idx2doc[doc_idx]}\n\n"
-    #         prompt = prompt.replace("[[TOPIC]]", sample["topic"]).replace("[[DOCUMENTS]]", documents_txt).replace("[[QUERY]]", sample["query"]).replace("[[N_DOCS]]", str(len(sample["documents"]))).replace("[[N_INSIGHTS]]", str(len(sample["insights"])))
-    #         return prompt, shard["shard_id"], 0.0
-    #     elif turn_index <= len(sample["shards"]):
-    #         shard = sample["shards"][(turn_index-1)]
-    #         documents_txt = ""
-    #         for doc_idx in shard["doc_idxs"]:
-    #             documents_txt += f"Document {doc_idx}:\n{doc_idx2doc[doc_idx]}\n\n"
-    #         prompt = f"I have found a few additional documents, please rewrite the summary considering all documents so far (from before, and the new ones).\n\n{documents_txt}"
-    #         return prompt, shard["shard_id"], 0.0
-    #     else:
-    #         return None, -1, 0.0
-
-    
-    # def process_original_sample(self, sample):
-    #     return {
-    #         "task_id": sample["task_id"],
-    #         "topic": sample["topic"],
-    #         "query": sample["query"],
-    #         "documents": sample["documents"],
-    #         "insights": sample["insights"]
-    #     }
-
-    # def __init__(self):
-    #     super().__init__()
 
     def summary2bullets(self, summary, max_summary_length=300):
         bullets = summary.split("\n")
@@ -539,8 +453,6 @@ class SummaryEvalUtils(EvalUtils):
         return {"bullets": trimmed_bullets, "trim_ratio": excess_percentage}
 
     def evaluate_insights(self, insights, summary, evaluator_model_card, eval_prompt_fn="eval_summhay.txt"):
-        # openaimodel = model.OpenAIModel() # make an instance so that we can use generate_json
-
         with open(eval_prompt_fn, "r") as f:   
             prompt_eval = f.read()
 
@@ -635,55 +547,7 @@ class SummaryEvalUtils(EvalUtils):
 
         while True:
             try:
-                # TODO: remember, SummaryEvalUtils object does NOT have a self.client! I need to refer to a model instance instead
                 response = self.client.chat.completions.create(model=model, messages=messages, timeout=timeout, max_completion_tokens=max_tokens, temperature=temperature, **kwargs)
-                # response = self.client.chat.completions.create(
-                #     model=model,
-                #     messages=messages,
-                #     timeout=timeout,
-                #     max_completion_tokens=max_tokens,
-                #     temperature=temperature,
-                #     logprobs=True,
-                #     top_logprobs=self.top_logprobs,
-                #     **kwargs
-                # )
-                # pipe = pipeline(
-                #     "text-generation",
-                #     model=model,
-                #     torch_dtype="auto",
-                #     device_map="auto",
-                # )
-                # response = pipe(
-                #     messages,
-                #     max_new_tokens=256,
-                # )[0]["generated_text"][-1]
-                # response = response.choices[0].message.content
-                # # thanks to Dominik Kundel: https://developers.openai.com/cookbook/articles/gpt-oss/run-transformers
-                # tokenizer = AutoTokenizer.from_pretrained(model)
-                # eval_model = AutoModelForCausalLM.from_pretrained(
-                #     model,
-                #     torch_dtype="auto",
-                #     device_map="auto"
-                # )
-
-                # messages = [
-                #     {"role": "user", "content": "Explain what MXFP4 quantization is."},
-                # ]
-
-                # inputs = tokenizer.apply_chat_template(
-                #     messages,
-                #     add_generation_prompt=True,
-                #     return_tensors="pt",
-                #     return_dict=True,
-                # ).to(eval_model.device)
-
-                # outputs = eval_model.generate(
-                #     **inputs,
-                #     max_new_tokens=200,
-                #     temperature=0.7
-                # )
-
-                # response = tokenizer.decode(outputs[0])
                 break
             except:
                 N += 1
@@ -702,7 +566,6 @@ class SummaryEvalUtils(EvalUtils):
 
         if not return_metadata:
             return response_text
-        # return {"message": response_text, "total_tokens": usage['total_tokens'], "prompt_tokens": usage['prompt_tokens'], "prompt_tokens_cached": prompt_tokens_cached, "completion_tokens": usage['completion_tokens'], "total_usd": total_usd}
         return {"message": response_text, "total_tokens": usage['total_tokens'], "prompt_tokens": usage['prompt_tokens'], "prompt_tokens_cached": prompt_tokens_cached, "completion_tokens": usage['completion_tokens']}
 
     def format_messages(self, messages, variables={}):

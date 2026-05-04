@@ -184,12 +184,6 @@ class OpenAIModel(BaseModel):
 
         return avg_entropy, avg_probability, perplexity, generated_text#, tokens_used
 
-    # from lost-in-conversation/model-openai.py
-    # def generate_json(self, messages, model="gpt-4o-mini", **kwargs):
-    #     response = self.generate(messages, model, is_json=True, **kwargs)
-    #     response["message"] = json.loads(response["message"])
-    #     return response
-
     def compute_entropy(self, token_logprobs):
         entropies = []
         for token_info in token_logprobs:
@@ -228,11 +222,6 @@ class ClaudeModel(BaseModel):
 
     def __init__(self, model_name, temperature, max_tokens, top_logprobs: int = 20):
         super().__init__(model_name)
-        # self.client = Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"),)
-        # self.client = OpenAI(
-        #     api_key=os.environ.get("ANTHROPIC_API_KEY"),  # Your Claude API key
-        #     base_url="https://api.anthropic.com/v1/",  # the Claude API endpoint
-        # )
         self.client = boto3.client('bedrock-runtime', region_name='eu-west-3')
         self.temperature = temperature
         self.max_tokens = max_tokens
@@ -243,15 +232,6 @@ class ClaudeModel(BaseModel):
         Sends a prompt to Claude API and returns:
         (average_entropy, average_probability, perplexity, generated_text)
         """
-
-        # resp = self.client.chat.completions.create(
-        #     model="claude-sonnet-4-6",  # Claude model name
-        #     messages=prompt,
-        #     max_completion_tokens=self.max_tokens,
-        #     temperature=self.temperature,
-        #     logprobs=True,
-        #     top_logprobs=self.top_logprobs,
-        # )
 
         # thanks to the Amazon Bedrock docs: https://docs.aws.amazon.com/bedrock/latest/userguide/custom-model-import-advanced-features.html
 
@@ -287,12 +267,6 @@ class ClaudeModel(BaseModel):
         # tokens_used = resp.usage.completion_tokens + resp.usage.prompt_tokens
 
         return avg_entropy, avg_probability, perplexity, generated_text#, tokens_used
-
-    # from lost-in-conversation/model-openai.py
-    # def generate_json(self, messages, model="gpt-4o-mini", **kwargs):
-    #     response = self.generate(messages, model, is_json=True, **kwargs)
-    #     response["message"] = json.loads(response["message"])
-    #     return response
 
     def compute_entropy(self, token_logprobs):
         entropies = []
