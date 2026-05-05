@@ -147,7 +147,7 @@ If you use ERGO-Extended in your research, please cite our paper:
 
 ```bibtex
 @misc{toutin-etal-2026-ergo-extended,
-    title = "Effective Context Utilization for Multi-Turn LLMs",
+    title = "ERGO-Extended: Multi-Signal Context Consolidation for Multi-Turn LLMs",
     author = "Toutin, Rémi  and
       Madisetti, Vijay K.",
 }
