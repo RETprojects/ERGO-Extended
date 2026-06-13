@@ -7,3 +7,10 @@
 # callstack for an experiment: example_main -> runExperiment/run_[task] -> init ergo/Ergo object w/ thresholds
 
 # imports needed: the types of models to be called (OpenAIModel, etc.), Ergo, RunERGO/execute, etc. (everything needed to run a model on GSM8K w/ signal thresholds)
+
+class Calibration():
+    # initialize a calibration for a specific model
+    # define the hyperparameter (signal threshold) values to be tested in combinations
+    # calibrate by running the model on GSM8K & assessing the results
+    # store the score for each hyperparameter combination
+    # highest accuracy -> choose that combination of signal thresholds
