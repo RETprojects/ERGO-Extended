@@ -14,3 +14,13 @@ class Calibration():
     # calibrate by running the model on GSM8K & assessing the results
     # store the score for each hyperparameter combination
     # highest accuracy -> choose that combination of signal thresholds
+
+    def __init__(self, model_name):
+        self.model_name = model_name
+        self.entropies = []
+        self.probabilities = []
+        self.perplexities = []
+        self.scores = {}
+    
+    def calibrate(self):
+        return
