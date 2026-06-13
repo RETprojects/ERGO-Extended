@@ -5,6 +5,7 @@
 # TODO: in runExperiment, call this file to tune thresholds before experiment begins
 # these thresholds will be used to initialize the Ergo object that is used in the experiment
 # callstack for an experiment: example_main -> runExperiment/run_[task] -> init ergo/Ergo object w/ thresholds
+# it could even be called at the end of RunExperiment's init function! get the optimal signal thresholds before running the experiment
 
 # imports needed: the types of models to be called (OpenAIModel, etc.), Ergo, RunERGO/execute, etc. (everything needed to run a model on GSM8K w/ signal thresholds)
 
@@ -17,9 +18,9 @@ class Calibration():
 
     def __init__(self, model_name):
         self.model_name = model_name
-        self.entropies = []
-        self.probabilities = []
-        self.perplexities = []
+        self.entropies = [0.01**i if i > 0 else 0 for i in range(51)]
+        self.probabilities = [0.01**i if i > 0 else 0 for i in range(51)]
+        self.perplexities = [0.01**i if i > 0 else 0 for i in range(51)]
         self.scores = {}
     
     def calibrate(self):
