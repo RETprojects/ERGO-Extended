@@ -23,4 +23,10 @@ class Calibration():
         self.scores = {}
     
     def calibrate(self):
-        return
+        for ent, prob, per in self.entropies, self.probabilities, self.perplexities:
+            # test this combination using the given model on the held-out set from GSM8K
+            # store the accuracy in scores
+            self.scores[(ent, prob, per)] = 0.0
+        # choose the combination of thresholds w/ the highest accuracy
+        combo = max(self.scores, key=self.scores.get)
+        return combo
