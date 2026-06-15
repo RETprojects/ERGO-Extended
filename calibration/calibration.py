@@ -8,6 +8,12 @@
 # it could even be called at the end of RunExperiment's init function! get the optimal signal thresholds before running the experiment
 
 # imports needed: the types of models to be called (OpenAIModel, etc.), Ergo, RunERGO/execute, etc. (everything needed to run a model on GSM8K w/ signal thresholds)
+from core.model import OpenAIModel, LocalLLMModel, ClaudeModel
+from core.dataset import GSM8K
+from core.ergo import Ergo
+from core.utils import Logger
+from generation.generator import RunERGO
+from evaluation.evaluator import GSM8KEvaluator
 
 class Calibration():
     # initialize a calibration for a specific model
@@ -50,7 +56,6 @@ class Calibration():
         self.scores = {}
     
     def calibrate(self):
-        best_acc = 0.0
         dataset_path="sharded_dataset.json"
         output_path="outputs/calibration.json"
         for ent, prob, per in self.entropies, self.probabilities, self.perplexities:
@@ -61,6 +66,7 @@ class Calibration():
             evaluator = GSM8KEvaluator(output_file=output_path, dataset_path=dataset_path)
             runner = RunERGO(model=self.model, dataset=dataset, ergo=ergo, logger=logger, evaluator=evaluator, num_Qs=20, num_runs=1)
             runner.execute(clear_cache=self.clear_cache)
+            # read the output file & determine the accuracy
             # store the accuracy in scores
             self.scores[(ent, prob, per)] = 0.0
         # choose the combination of thresholds w/ the highest accuracy
