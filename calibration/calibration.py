@@ -24,8 +24,17 @@ class Calibration():
         self.scores = {}
     
     def calibrate(self):
+        best_acc = 0.0
+        dataset_path="sharded_dataset.json"
+        output_path="outputs/calibration.json"
         for ent, prob, per in self.entropies, self.probabilities, self.perplexities:
             # test this combination using the given model on the held-out set from GSM8K
+            dataset = GSM8K(dataset_path=dataset_path)
+            ergo = Ergo(model=self.model, threshold_H=ent, threshold_p=prob, threshold_PPL=per)
+            logger = Logger(model=self.model, dataset=dataset, output_path=output_path)
+            evaluator = GSM8KEvaluator(output_file=output_path, dataset_path=dataset_path)
+            runner = RunERGO(model=self.model, dataset=dataset, ergo=ergo, logger=logger, evaluator=evaluator, num_Qs=20, num_runs=1)
+            runner.execute(clear_cache=self.clear_cache)
             # store the accuracy in scores
             self.scores[(ent, prob, per)] = 0.0
         # choose the combination of thresholds w/ the highest accuracy
