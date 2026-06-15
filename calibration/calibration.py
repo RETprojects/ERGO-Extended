@@ -16,8 +16,34 @@ class Calibration():
     # store the score for each hyperparameter combination
     # highest accuracy -> choose that combination of signal thresholds
 
-    def __init__(self, model_name):
+    def __init__(self, model_name, device="cuda", device_map="auto", max_new_tokens=1024, dtype="float16", temperature=1.0, do_sample=True, openai=False, claude=False, clear_cache=True):
+        # borrowed from RunExperiment.__init__()
         self.model_name = model_name
+        self.clear_cache = clear_cache
+        if openai:
+            self.model = OpenAIModel(
+                model_name=model_name,
+                temperature=temperature,
+                max_tokens=max_new_tokens
+            )
+        elif claude:
+            self.model = ClaudeModel(
+                model_name=model_name,
+                temperature=temperature,
+                max_tokens=max_new_tokens
+            )
+        else:
+            self.model = LocalLLMModel(
+                model_name=model_name,
+                device=device,
+                max_new_tokens=max_new_tokens,
+                dtype=dtype,
+                temperature=temperature,
+                do_sample=do_sample,
+                device_map=device_map
+            )
+            self.tokenizer = self.model.tokenizer
+
         self.entropies = [0.01**i if i > 0 else 0 for i in range(51)]
         self.probabilities = [0.01**i if i > 0 else 0 for i in range(51)]
         self.perplexities = [0.01**i if i > 0 else 0 for i in range(51)]
