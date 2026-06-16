@@ -15,6 +15,8 @@ from core.utils import Logger
 from generation.generator import RunERGO
 from evaluation.evaluator import GSM8KEvaluator
 
+import re
+
 class Calibration():
     # initialize a calibration for a specific model
     # define the hyperparameter (signal threshold) values to be tested in combinations
@@ -67,8 +69,16 @@ class Calibration():
             runner = RunERGO(model=self.model, dataset=dataset, ergo=ergo, logger=logger, evaluator=evaluator, num_Qs=20, num_runs=1)
             runner.execute(clear_cache=self.clear_cache)
             # read the output file & determine the accuracy
+            with open(output_path, 'r') as file:
+                content = file.read()
+                pattern = r"\"score\": \\d" # pattern for "score": followed by a digit (0 or 1)
+                matches = re.findall(pattern, content)
+                # for each match, tally up the score
+                score = 0
+                for m in matches:
+                    score += int(m[-1]) # get the last character, which is a digit corresponding to the score for that turn
             # store the accuracy in scores
-            self.scores[(ent, prob, per)] = 0.0
+            self.scores[(ent, prob, per)] = score
         # choose the combination of thresholds w/ the highest accuracy
         combo = max(self.scores, key=self.scores.get)
         return combo
