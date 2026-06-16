@@ -59,26 +59,31 @@ class Calibration():
     
     def calibrate(self):
         dataset_path="sharded_dataset.json"
-        output_path="outputs/calibration.json"
-        for ent, prob, per in self.entropies, self.probabilities, self.perplexities:
-            # test this combination using the given model on the held-out set from GSM8K
-            dataset = GSM8K(dataset_path=dataset_path)
-            ergo = Ergo(model=self.model, threshold_H=ent, threshold_p=prob, threshold_PPL=per)
-            logger = Logger(model=self.model, dataset=dataset, output_path=output_path)
-            evaluator = GSM8KEvaluator(output_file=output_path, dataset_path=dataset_path)
-            runner = RunERGO(model=self.model, dataset=dataset, ergo=ergo, logger=logger, evaluator=evaluator, num_Qs=20, num_runs=1)
-            runner.execute(clear_cache=self.clear_cache)
-            # read the output file & determine the accuracy
-            with open(output_path, 'r') as file:
-                content = file.read()
-                pattern = r"\"score\": \\d" # pattern for "score": followed by a digit (0 or 1)
-                matches = re.findall(pattern, content)
-                # for each match, tally up the score
-                score = 0
-                for m in matches:
-                    score += int(m[-1]) # get the last character, which is a digit corresponding to the score for that turn
-            # store the accuracy in scores
-            self.scores[(ent, prob, per)] = score
+        # output_path="outputs/calibration.json"
+        run_no = 0 # track the runs for output file paths
+        # for ent, prob, per in self.entropies, self.probabilities, self.perplexities:
+        for ent in self.entropies:
+            for prob in self.probabilities:
+                for per in self.perplexities:
+                    output_path=f"outputs/calibration_run{run_no}.json"
+                    # test this combination using the given model on the held-out set from GSM8K
+                    dataset = GSM8K(dataset_path=dataset_path)
+                    ergo = Ergo(model=self.model, threshold_H=ent, threshold_p=prob, threshold_PPL=per)
+                    logger = Logger(model=self.model, dataset=dataset, output_path=output_path)
+                    evaluator = GSM8KEvaluator(output_file=output_path, dataset_path=dataset_path)
+                    runner = RunERGO(model=self.model, dataset=dataset, ergo=ergo, logger=logger, evaluator=evaluator, num_Qs=20, num_runs=1)
+                    runner.execute(clear_cache=self.clear_cache)
+                    # read the output file & determine the accuracy
+                    with open(output_path, 'r') as file:
+                        content = file.read()
+                        pattern = r"\"score\": \\d" # pattern for "score": followed by a digit (0 or 1)
+                        matches = re.findall(pattern, content)
+                        # for each match, tally up the score
+                        score = 0
+                        for m in matches:
+                            score += int(m[-1]) # get the last character, which is a digit corresponding to the score for that turn
+                    # store the accuracy in scores
+                    self.scores[(ent, prob, per)] = score
         # choose the combination of thresholds w/ the highest accuracy
         combo = max(self.scores, key=self.scores.get)
         return combo
