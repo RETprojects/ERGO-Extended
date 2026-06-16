@@ -52,9 +52,9 @@ class Calibration():
             )
             self.tokenizer = self.model.tokenizer
 
-        self.entropies = [0.01**i if i > 0 else 0 for i in range(51)]
-        self.probabilities = [0.01**i if i > 0 else 0 for i in range(51)]
-        self.perplexities = [0.01**i if i > 0 else 0 for i in range(51)]
+        self.entropies = [0.01, 0.03, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5]
+        self.probabilities = [0.01, 0.05, 0.1, 0.3, 0.5]
+        self.perplexities = [0.01, 0.05, 0.1, 0.5]
         self.scores = {}
     
     def calibrate(self):
