@@ -64,6 +64,7 @@ class Calibration():
         for ent in self.entropies:
             for prob in self.probabilities:
                 for per in self.perplexities:
+                    print((ent, prob, per)) # so we can keep track of the threshold combinations
                     output_path_full=f"calibration_run0.json"
                     # test this combination using the given model on the held-out set from GSM8K
                     dataset = GSM8K(dataset_path=dataset_path)
@@ -83,6 +84,7 @@ class Calibration():
                             score += int(m[-1]) # get the last character, which is a digit corresponding to the score for that turn
                     # store the accuracy in scores
                     self.scores[(ent, prob, per)] = score
+                    print(score)
         # choose the combination of thresholds w/ the highest accuracy
         combo = max(self.scores, key=self.scores.get)
         return combo
