@@ -74,7 +74,7 @@ class Calibration():
                     runner = RunERGO(model=self.model, dataset=dataset, ergo=ergo, logger=logger, evaluator=evaluator, num_Qs=20, num_runs=1)
                     runner.execute(clear_cache=self.clear_cache)
                     # read the output file & determine the accuracy
-                    with open(output_path, 'r') as file:
+                    with open(output_path_full, 'r') as file:
                         content = file.read()
                         pattern = r"\"score\": \\d" # pattern for "score": followed by a digit (0 or 1)
                         matches = re.findall(pattern, content)
