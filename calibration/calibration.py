@@ -63,8 +63,6 @@ class Calibration():
         output_path="calibration.json"
         dataset = GSM8K(dataset_path=dataset_path)
         evaluator = GSM8KEvaluator(output_file=output_path, dataset_path=dataset_path)
-        # for ent, prob, per in zip(self.entropies, self.probabilities, self.perplexities):
-        # for ent in self.entropies, prob in self.probabilities, per in self.perplexities:
         for thresholds in itertools.product(self.entropies, self.probabilities, self.perplexities):
             ent, prob, per = thresholds
             print((ent, prob, per)) # so we can keep track of the threshold combinations
