@@ -17,6 +17,7 @@ from evaluation.evaluator import GSM8KEvaluator
 
 import re
 import itertools
+import numpy as np
 
 class Calibration():
     # initialize a calibration for a specific model
@@ -64,6 +65,32 @@ class Calibration():
         # compute the change in average token-level entropy, probability, & perplexity at each turn
         # this gives us distributions of entropy, probability, & perplexity (1 per signal)
         # from these distributions of signal changes, select a threshold for each signal based on a percentile aligned with the model's baseline aptitude
+
+        # get the held-out GSM8K examples, which should NOT be included in the examples that we will evaluate the model on
+        dataset_path="sharded_dataset.json"
+        dataset = GSM8K(dataset_path=dataset_path)
+        # data structures to contain the distributions of signal changes
+        changes_ent = []
+        changes_prob = []
+        changes_perpl = []
+        # also track the model's baseline aptitude (peak/best-case performance capability, averaged across all tasks)
+        aptitudes = []
+        # run the model over the examples, computing the change in average of each signal at each turn
+        output_path="calibration.json"
+        evaluator = GSM8KEvaluator(output_file=output_path, dataset_path=dataset_path)
+        # TODO: run the model in the regular way, not using ERGO w/ specific thresholds?
+        ergo = Ergo(model=self.model)
+        logger = Logger(model=self.model, dataset=dataset, output_path=output_path)
+        runner = RunERGO(model=self.model, dataset=dataset, ergo=ergo, logger=logger, evaluator=evaluator, num_Qs=80, num_runs=1)
+        runner.execute(clear_cache=self.clear_cache)
+        # TODO: determine how to calculate the signal changes & baseline aptitude from running the model
+        # determine the percentile
+        baseline_aptitude = np.mean(aptitudes)
+        # applying the percentile to the distributions, select & return the thresholds to be used by the model during evaluation
+        threshold_ent = np.percentile(np.array(changes_ent), baseline_aptitude)
+        threshold_prob = np.percentile(np.array(changes_prob), baseline_aptitude)
+        threshold_perpl = np.percentile(np.array(changes_perpl), baseline_aptitude)
+        return (threshold_ent, threshold_prob, threshold_perpl)
 
         # dataset_path="sharded_dataset.json"
         # output_path="calibration.json"
